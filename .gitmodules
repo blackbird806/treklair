@@ -1,0 +1,8 @@
+[submodule "libraries/SDL"]
+	path = libraries/SDL
+	url = https://github.com/libsdl-org/SDL
+[submodule "libraries/imgui"]
+	path = libraries/imgui
+	url = https://github.com/ocornut/imgui
+	branch = docking
+
