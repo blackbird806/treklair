@@ -7,22 +7,29 @@ set_defaultmode("debug")
 set_languages("c11", "cxxlatest")
 add_rules("plugin.vsxmake.autoupdate")
 add_rules("mode.debug", "mode.release")
+add_rules("plugin.compile_commands.autoupdate")
 
--- glm to remo
+if is_os("windows") then
+	if is_mode("debug") then
+		set_runtimes("MDd")
+	elseif is_mode("release") then
+		set_runtimes("MD")
+	end
+end
+
 target("treklair")
     set_kind("binary")
     add_files("src/**.cpp")
-	
 	-- SDL
 	add_includedirs("libraries/SDL/include")
-	add_linkdirs("libraries/SDL/VisualC/x64/Debug")
+	add_linkdirs("libraries/SDL/VisualC/x64/Debug/")
 	add_links("SDL3")
 
 	--imgui
 	add_includedirs("libraries/imgui")
 	add_files("libraries/imgui/*.cpp")
 	add_files("libraries/imgui/backends/imgui_impl_sdlrenderer3.cpp")
---
+
 -- If you want to known more usage about xmake, please see https://xmake.io
 --
 -- ## FAQ
@@ -87,7 +94,6 @@ target("treklair")
 --    -- add compilation and link flags
 --    add_cxflags("-stdnolib", "-fno-strict-aliasing")
 --    add_ldflags("-L/usr/local/lib", "-lpthread", {force = true})
---
 -- @endcode
 --
 
