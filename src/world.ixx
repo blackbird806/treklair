@@ -64,7 +64,7 @@ export struct World
 		for (int i = 0; auto const& tile : tiles)
 		{
 			int pos_x = (i % size_x) * tile_size;
-			int pos_y = (i / size_y) * tile_size;
+			int pos_y = (i / size_x) * tile_size;
 			SDL_FRect rect;
 			rect.x = camera.worldToScreenX(pos_x);
 			rect.y = camera.worldToScreenY(pos_y);

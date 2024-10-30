@@ -55,13 +55,11 @@ int main(int argc, char** argv)
 	bool done = false;
 	std::unordered_map<SDL_Keycode, bool> input_map;
 
-	World world(2, 2);
+	World world(20, 10);
 	Camera camera;
 
 	while (!done)
 	{
-
-
 		SDL_Event event;
 
 		while (SDL_PollEvent(&event))
