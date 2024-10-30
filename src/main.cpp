@@ -1,5 +1,6 @@
 #include <format>
 #include <print>
+#include <unordered_map>
 
 #include "imgui.h"
 #include "backends/imgui_impl_sdl3.h"
@@ -49,6 +50,7 @@ int main(int argc, char** argv)
 	bool show_demo_window = true;
 
 	bool done = false;
+	std::unordered_map<SDL_Keycode, bool> input_map;
 
 	while (!done)
 	{
@@ -57,15 +59,20 @@ int main(int argc, char** argv)
 		while (SDL_PollEvent(&event))
 		{
 			ImGui_ImplSDL3_ProcessEvent(&event);
-			switch (event.type)
-			{
-				if (event.type == SDL_EVENT_QUIT)
-					done = true;
-				if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && event.window.windowID == SDL_GetWindowID(window))
-					done = true;
+		
+			if (event.type == SDL_EVENT_QUIT)
+				done = true;
 
-			default:
-				break;
+			else if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && event.window.windowID == SDL_GetWindowID(window))
+				done = true;
+
+			else if (event.type == SDL_EVENT_KEY_DOWN)
+			{
+				input_map[event.key.key] = true;
+			}
+			else if (event.type == SDL_EVENT_KEY_UP)
+			{
+				input_map[event.key.key] = false;
 			}
 		}
 
@@ -75,7 +82,6 @@ int main(int argc, char** argv)
 
 		if (show_demo_window)
 			ImGui::ShowDemoWindow(&show_demo_window);
-
 
 		// Rendering
 		ImGui::Render();
