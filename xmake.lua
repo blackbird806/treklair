@@ -19,9 +19,10 @@ end
 
 target("treklair")
     set_kind("binary")
-    add_files("src/**.cpp|src/**.ixx")
-	add_headerfiles("src/**.h|src/**.hpp")
-	add_includedirs("src/")
+    add_files("src/**.cpp")
+	add_files("src/**.ixx")
+	add_headerfiles("src/**.h")
+	add_headerfiles("src/**.hpp")
 	-- SDL
 	add_includedirs("libraries/SDL/include")
 	add_linkdirs("libraries/SDL/VisualC/x64/Debug/")
