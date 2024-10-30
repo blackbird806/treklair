@@ -8,12 +8,16 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
 
+import physics;
+
 constexpr int gameSizeX = 640;
 constexpr int gameSizeY = 480;
 constexpr float gameAspectRatio = (float)gameSizeX / gameSizeY;
 
 int main(int argc, char** argv)
 {
+	Rigidbody* rb;
+
 	std::print("hello {}", "world");
 	
 	if (!SDL_Init(SDL_INIT_VIDEO))

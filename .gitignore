@@ -9,5 +9,4 @@ build/
 .cache
 compile_commands.json
 .vs/
-
-
+vsxmake2022/
