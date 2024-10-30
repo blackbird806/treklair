@@ -19,7 +19,7 @@ end
 
 target("treklair")
     set_kind("binary")
-    add_files("src/**.cpp")
+    add_files("src/**.cpp|src/**.ixx")
 	add_headerfiles("src/**.h|src/**.hpp")
 	-- SDL
 	add_includedirs("libraries/SDL/include")
@@ -30,6 +30,8 @@ target("treklair")
 	add_includedirs("libraries/imgui")
 	add_files("libraries/imgui/*.cpp")
 	add_files("libraries/imgui/backends/imgui_impl_sdlrenderer3.cpp")
+	add_files("libraries/imgui/backends/imgui_impl_sdl3.cpp")
+
 
 -- If you want to known more usage about xmake, please see https://xmake.io
 --
