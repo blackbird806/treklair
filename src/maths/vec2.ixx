@@ -3,7 +3,9 @@
 #include <cassert>
 #include <cmath>
 
-	struct vec2
+export module maths:vec2;
+
+	export struct vec2
 	{
 		constexpr vec2() noexcept : x(0), y(0)
 		{

@@ -1,7 +1,5 @@
-﻿module;
-#include "../maths/vec2.h"
-
-export module physics:shapes;
+﻿export module physics:shapes;
+import maths;
 
 export enum ShapeType🗿
 {

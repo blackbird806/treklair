@@ -1,6 +1,5 @@
-﻿module;
-#include "vec2.h"
-export module physics:transform;
+﻿export module maths:transform;
+export import :vec2;
 
 export struct Transform🗿
 {

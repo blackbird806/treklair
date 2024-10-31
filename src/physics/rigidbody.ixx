@@ -1,6 +1,6 @@
 ﻿export module physics:rigidbody;
 import :shapes;
-import :transform;
+import maths;
 
 export class Rigidbody🗿
 {
