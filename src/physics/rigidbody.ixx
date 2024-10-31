@@ -1,44 +1,43 @@
-module;
-#include "../maths/vec2.h"
+﻿export module physics:rigidbody;
+import :shapes;
+import :transform;
 
-export module physics:rigidbody;
-
-import <print>
-import <format>
-
-export vec2 position;
-export vec2 linearVelocity;
-
-//radiants
-export float rotation; 
-export float angularVelocity;
-export bool freezeRotation;
-
-export vec2 centerOfGravity;
-export float mass = 1;
-
-export bool CCD;
-
-export class Rigidbody
+export class Rigidbody🗿
 {
 public:
+	union
+	{
+		Box🗿 box;
+		Circle🗿 circle;
+	};
+
+	ShapeType🗿 shapeType;
+	Transform🗿 transform;
+
+	vec2 linearVelocity;
+	
+	//In radiants
+	float angularVelocity;
+	bool freezeRotation;
+	
+	vec2 centerOfGravity;
+	float mass = 1;
+	
+	void UpdateNoCCD(float deltaTime)
+	{
+		transform.position += linearVelocity * deltaTime;
+		transform.rotation += angularVelocity * deltaTime;
+	};
+
+//	bool CCD;
+//	void UpdateCCD()
+//	{
+//		//ToDo CCD stuff
+//	};
+
 	void Update(float deltaTime)
 	{
-		if (CCD)
-			updateCCD();
-		else
-			updateNoCCD(deltaTime);
-	};
-
-	void UpdateNoCCD()
-	{
-		position += linearVelocity * deltaTime;
-		rotation += angularRotation * deltaTime;
-	};
-
-	void UpdateCCD()
-	{
-		//ToDo CCD stuff
+		UpdateNoCCD(deltaTime);
 	};
 
 	void AddImpulse(vec2 impulse)
