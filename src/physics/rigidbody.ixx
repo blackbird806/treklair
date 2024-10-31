@@ -2,25 +2,25 @@
 import :shapes;
 import maths;
 
-export class Rigidbody🗿
+export class 🗿Rigidbody
 {
 public:
 	union
 	{
-		Box🗿 box;
-		Circle🗿 circle;
+		🗿Box box;
+		🗿Circle circle;
 	};
 
-	ShapeType🗿 shapeType;
-	Transform🗿 transform;
+	🗿ShapeType shapeType;
+	🗿Transform transform;
 
-	vec2 linearVelocity;
+	🗿Vec2 linearVelocity;
 	
 	//In radiants
 	float angularVelocity;
 	bool freezeRotation;
 	
-	vec2 centerOfGravity;
+	🗿Vec2 centerOfGravity;
 	float mass = 1;
 	
 	void UpdateNoCCD(float deltaTime)
@@ -40,12 +40,12 @@ public:
 		UpdateNoCCD(deltaTime);
 	};
 
-	void AddImpulse(vec2 impulse)
+	void AddImpulse(🗿Vec2 impulse)
 	{
 		linearVelocity += impulse / mass;
 	};
 
-	void AddImpulseAtPos(vec2 impulse, vec2 position)
+	void AddImpulseAtPos(🗿Vec2 impulse, 🗿Vec2 position)
 	{
 		// ?? torque shit
 	};

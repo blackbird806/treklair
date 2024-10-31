@@ -18,7 +18,7 @@ constexpr float gameAspectRatio = (float)gameSizeX / gameSizeY;
 
 int main(int argc, char** argv)
 {
-	Rigidbody🗿* rb;
+	🗿Rigidbody* rb;
 
 	std::print("hello {}", "world");
 

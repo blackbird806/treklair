@@ -1,4 +1,4 @@
-module;
+﻿module;
 
 #include <SDL3/SDL.h>
 #include <cassert>
@@ -11,7 +11,7 @@ export inline float gScaleFactor;
 
 export struct Camera
 {
-	vec2 pos;
+	🗿Vec2 pos;
 	float speed = 100;
 
 	[[nodiscard]] int worldToScreenX(int x) const noexcept
