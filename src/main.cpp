@@ -1,4 +1,4 @@
-#include <format>
+﻿#include <format>
 #include <print>
 #include <unordered_map>
 
@@ -13,6 +13,16 @@ import treklair;
 
 int main(int argc, char** argv)
 {
+	🗿AABB aabb = 🗿AABB({ 100,100 }, { 150,150 });
+	🗿AABB aabb2 = 🗿AABB({ 100,100 }, { 130,150 });
+	🗿Rigidbody c = 🗿Rigidbody(🗿Circle(50));
+	🗿Rigidbody c2 = 🗿Rigidbody(🗿Circle(50));
+	🗿Rigidbody b = 🗿Rigidbody(🗿Box({50, 50}));
+	🗿Rigidbody b2 = 🗿Rigidbody(🗿Box({ 75,75 }));
+	c2.transform.position = 🗿Vec2(200, 200);
+	b.transform.position = 🗿Vec2(300, 300);
+
+
 	std::print("hello {}", "world");
 
 	if (!SDL_Init(SDL_INIT_VIDEO))
@@ -36,6 +46,8 @@ int main(int argc, char** argv)
 	bool done = false;
 	std::unordered_map<SDL_Keycode, bool> input_map;
 	
+	🗿Vec2 mousePos;
+
 	GameRenderer gameRenderer;
 	World world(1, 1);
 	while (!done)
@@ -61,7 +73,8 @@ int main(int argc, char** argv)
 				input_map[event.key.key] = false;
 			}
 		}
-		
+		SDL_GetMouseState(&mousePos.x, &mousePos.y);
+		mousePos -= 🗿Vec2(100, 0);
 		engineRenderer.startFrame();
 
 		SDL_SetRenderLogicalPresentation(sdl_renderer, gameSizeX, gameSizeY, SDL_LOGICAL_PRESENTATION_LETTERBOX);
@@ -84,6 +97,24 @@ int main(int argc, char** argv)
 			SDL_SetRenderLogicalPresentation(sdl_renderer, w, h, SDL_LOGICAL_PRESENTATION_DISABLED);
 			SDL_RenderTexture(sdl_renderer, renderTarget, nullptr, nullptr);
 		}
+
+		c.transform.position = mousePos;
+		b.transform.rotation += 0.0005;
+		//aabb2.min = mousePos - 🗿Vec2(50, 50);
+		//aabb2.max = mousePos + 🗿Vec2(50,50);
+		//if(physics::AABBOverlap(aabb, aabb2))
+		if (physics::AABBCircleOverlap(aabb, c.circle, c.transform))
+		//if (physics::CircleOverlap(c.circle, c2.circle, c.transform, c2.transform))
+			SDL_SetRenderDrawColor(sdl_renderer, 255, 0, 0, 255);
+		else
+			SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 255, 255);
+
+		quickdraw::DrawRigidbody(c);
+		quickdraw::DrawRigidbody(b);
+		//quickdraw::DrawRigidbody(c2);
+		quickdraw::DrawAABB(aabb);
+		//quickdraw::DrawAABB(aabb2);
+
 		engineRenderer.engineUI();
 
 		ImGui::Begin("hello", nullptr);

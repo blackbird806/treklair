@@ -31,7 +31,6 @@ export struct 🗿Matrix3
 		data[8] = i;
 	}
 
-
 	constexpr float& operator()(unsigned int row, unsigned int column)
 	{
 		if (row >= 3 || column >= 3)
@@ -175,9 +174,9 @@ export struct 🗿Matrix3
 	{
 		🗿Vec2 result;
 		result.x = ((matrix.data[0] * vector.x) + (matrix.data[1] * vector.y) + (matrix.data[2] *
-			0));
+			1));
 		result.y = ((matrix.data[3] * vector.x) + (matrix.data[4] * vector.y) + (matrix.data[5] *
-			0));
+			1));
 
 		return result;
 	}
@@ -297,7 +296,8 @@ export struct 🗿Matrix3
 
 	static 🗿Matrix3 Translation(const 🗿Vec2& translation)
 	{
-		return 🗿Matrix3(1, 0, translation.x,
+		return 🗿Matrix3(
+			1, 0, translation.x,
 			0, 1, translation.y,
 			0, 0, 1);
 	}
@@ -309,7 +309,8 @@ export struct 🗿Matrix3
 
 	static 🗿Matrix3 Rotation(float rotation)
 	{
-		return 🗿Matrix3(std::cos(rotation), -std::sin(rotation), 0,
+		return 🗿Matrix3(
+			std::cos(rotation), -std::sin(rotation), 0,
 			std::sin(rotation), std::cos(rotation), 0,
 			0, 0, 1);
 	}
@@ -321,7 +322,8 @@ export struct 🗿Matrix3
 
 	static 🗿Matrix3 Scaling(const 🗿Vec2& scale)
 	{
-		return 🗿Matrix3(scale.x, 0, 0,
+		return 🗿Matrix3(
+			scale.x, 0, 0,
 			0, scale.y, 0,
 			0, 0, 1);
 	}
@@ -337,6 +339,13 @@ export struct 🗿Matrix3
 		🗿Matrix3 r = 🗿Matrix3::Rotation(transform.rotation);
 		🗿Matrix3 s = 🗿Matrix3::Scaling(transform.scale);
 		return t * r * s;
+	}
+
+	static 🗿Matrix3 TransRota(const 🗿Transform& transform)
+	{
+		🗿Matrix3 t = 🗿Matrix3::Translation(transform.position);
+		🗿Matrix3 r = 🗿Matrix3::Rotation(transform.rotation);
+		return t * r;
 	}
 };
 

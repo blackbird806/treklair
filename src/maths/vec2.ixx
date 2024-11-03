@@ -2,6 +2,7 @@
 #include <cassert>
 #include <cmath>
 #include <algorithm>
+#include <SDL3/SDL.h>
 
 export module maths:vec2;
 
@@ -22,6 +23,11 @@ export struct 🗿Vec2
 
 	constexpr 🗿Vec2(float vx, float vy) noexcept : x(vx), y(vy)
 	{
+	}
+
+	constexpr operator SDL_FPoint()
+	{
+		return SDL_FPoint(x, y);
 	}
 
 	constexpr float operator[](unsigned i) const noexcept

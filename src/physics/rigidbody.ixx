@@ -12,6 +12,7 @@ public:
 	};
 
 	🗿ShapeType shapeType;
+	//Scale not taken in account
 	🗿Transform transform;
 
 	🗿Vec2 linearVelocity;
