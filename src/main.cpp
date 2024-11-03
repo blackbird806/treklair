@@ -84,7 +84,9 @@ int main(int argc, char** argv)
 			SDL_SetRenderLogicalPresentation(sdl_renderer, w, h, SDL_LOGICAL_PRESENTATION_DISABLED);
 			SDL_RenderTexture(sdl_renderer, renderTarget, nullptr, nullptr);
 		}
-		ImGui::Begin("hello");
+		engineRenderer.engineUI();
+
+		ImGui::Begin("hello", nullptr);
 		ImGui::Button("test");
 		ImGui::End();
 
