@@ -8,17 +8,27 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
+#include "main.h"
 
 import treklair;
+import renderer;
 import physics;
 
 constexpr int gameSizeX = 640;
 constexpr int gameSizeY = 480;
 constexpr float gameAspectRatio = (float)gameSizeX / gameSizeY;
 
+
 int main(int argc, char** argv)
 {
-	🗿Rigidbody* rb;
+	🗿Rigidbody c1 = 🗿Rigidbody(🗿Circle(30));
+	c1.transform.position = { 100,100 };
+	🗿Rigidbody c2 = 🗿Rigidbody(🗿Circle(30));
+	c2.transform.position = { 100,130 };
+	🗿Rigidbody b1 = 🗿Rigidbody(🗿Box(🗿Vec2(1, 1)));
+	🗿Rigidbody b2 = 🗿Rigidbody(🗿Box(🗿Vec2(1, 1)));
+	🗿AABB aabb1 = 🗿AABB({ 0,0 }, {10, 10});
+	🗿AABB aabb2 = 🗿AABB({ 5,5 }, { 15,15 });
 
 	std::print("hello {}", "world");
 
@@ -58,6 +68,8 @@ int main(int argc, char** argv)
 	bool done = false;
 	std::unordered_map<SDL_Keycode, bool> input_map;
 
+	renderer:debugRenderer = renderer;
+
 	World world(20, 10);
 	Camera camera;
 
@@ -85,6 +97,12 @@ int main(int argc, char** argv)
 			}
 		}
 
+		//Mouse position 
+		🗿Vec2 mousePos;
+		SDL_GetMouseState(&mousePos.x, &mousePos.y);
+		//Set c1 pos to cursor
+		c1.transform.position = mousePos;
+
 		ImGui_ImplSDLRenderer3_NewFrame();
 		ImGui_ImplSDL3_NewFrame();
 		ImGui::NewFrame();
@@ -93,10 +111,12 @@ int main(int argc, char** argv)
 			ImGui::ShowDemoWindow(&show_demo_window);
 
 		SDL_SetRenderTarget(renderer, renderTarget);
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+
 		SDL_RenderClear(renderer);
 
 		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-		world.draw(renderer, camera);
+		//world.draw(renderer, camera);
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
 		SDL_SetRenderTarget(renderer, nullptr);
@@ -116,6 +136,15 @@ int main(int argc, char** argv)
 		}
 		// Rendering
 		ImGui::Render();
+
+		if (CircleOverlap(c1.circle, c2.circle, c1.transform, c2.transform))
+			SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+		else
+			SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+
+		DrawRigidbody(c1);
+		DrawRigidbody(c2);
+
 		//SDL_RenderSetScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
 		//SDL_SetRenderDrawColorFloat(renderer, clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		//SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);

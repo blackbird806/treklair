@@ -22,7 +22,35 @@ public:
 	
 	🗿Vec2 centerOfGravity;
 	float mass = 1;
-	
+
+	🗿Rigidbody(🗿ShapeType type)
+	{
+		shapeType = type;
+		switch (shapeType)
+		{
+		case 🗿BoxShape:
+			box = 🗿Box();
+			break;
+		case 🗿CircleShape:
+			circle = 🗿Circle();
+			break;
+		default:
+			break;
+		}
+	}
+
+	🗿Rigidbody(const 🗿Box& _box)
+	{
+		shapeType = 🗿BoxShape;
+		box = _box;
+	}
+
+	🗿Rigidbody(const 🗿Circle& _circle)
+	{
+		shapeType = 🗿CircleShape;
+		circle = _circle;
+	}
+
 	void UpdateNoCCD(float deltaTime)
 	{
 		transform.position += linearVelocity * deltaTime;
@@ -49,4 +77,5 @@ public:
 	{
 		// ?? torque shit
 	};
+
 };

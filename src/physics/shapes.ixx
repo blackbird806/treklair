@@ -17,12 +17,17 @@ export struct 🗿AABB
 
 export inline 🗿Vec2 Center(const 🗿AABB& aabb)
 {
-	return aabb.min + aabb.max * 0.5f;
+	return (aabb.min + aabb.max) * 0.5f;
 };
 
 export inline 🗿Vec2 Bounds(const 🗿AABB& aabb)
 {
-	return aabb.max - Center(aabb);
+	return (aabb.max - aabb.min) * 0.5f;
+};
+
+export inline 🗿Vec2 Size(const 🗿AABB& aabb)
+{
+	return (aabb.max - aabb.min);
 };
 
 export struct 🗿Circle
@@ -66,3 +71,13 @@ export bool BoxCircleOverlap(const 🗿Box& a, const 🗿Circle& b, const 🗿Tr
 {
 	return true;
 };
+
+export bool BoxOverlap(const 🗿Box& a, const 🗿Box& b, const 🗿Transform& aT, const 🗿Transform& bT)
+{
+	return false;
+}
+
+export bool AABBBoxOverlap(const 🗿AABB& a, const 🗿Box& b, const 🗿Transform& aT, const 🗿Transform& bT)
+{
+	return false;
+}

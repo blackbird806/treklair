@@ -5,4 +5,5 @@ export struct 🗿Transform
 {
 	🗿Vec2 position;
 	float rotation;
+	🗿Vec2 scale;
 };
