@@ -103,7 +103,7 @@ int main(int argc, char** argv)
 		//aabb2.min = mousePos - 🗿Vec2(50, 50);
 		//aabb2.max = mousePos + 🗿Vec2(50,50);
 		//if(physics::AABBOverlap(aabb, aabb2))
-		if (physics::AABBCircleOverlap(aabb, c.circle, c.transform))
+		if (physics::BoxCircleOverlap(b.box, c.circle, b.transform, c.transform))
 		//if (physics::CircleOverlap(c.circle, c2.circle, c.transform, c2.transform))
 			SDL_SetRenderDrawColor(sdl_renderer, 255, 0, 0, 255);
 		else

@@ -38,6 +38,11 @@ export struct 🗿Circle
 export struct 🗿Box
 {
 	🗿Vec2 halfSize;
+
+	🗿AABB ToAABB(🗿Vec2 position) const
+	{
+		return 🗿AABB(position - halfSize, position + halfSize);
+	}
 };
 
 namespace physics {
@@ -58,20 +63,23 @@ namespace physics {
 		return (sqrDist <= radiusSum * radiusSum);
 	};
 
-	export bool AABBCircleOverlap(const 🗿AABB& a, const 🗿Circle& b, const 🗿Transform& bT)
+	export bool AABBCircleOverlap(const 🗿AABB& a, const 🗿Circle& b, const 🗿Vec2& pT)
 	{
 		🗿Vec2 centerAABB = Center(a);
-		🗿Vec2 distance = bT.position - centerAABB;
+		🗿Vec2 distance = pT - centerAABB;
 		🗿Vec2 boundsAABB = a.max - centerAABB;
 		🗿Vec2 clampDist = 🗿Vec2::clamp(distance, -boundsAABB, boundsAABB);
 		🗿Vec2 closestPoint = centerAABB + clampDist;
-		return (closestPoint - bT.position).sqrLength() <= b.radius * b.radius;
+		return (closestPoint - pT).sqrLength() <= b.radius * b.radius;
 	};
 
 	export bool BoxCircleOverlap(const 🗿Box& a, const 🗿Circle& b, const 🗿Transform& aT, const 🗿Transform& bT)
 	{
+		🗿Matrix3 aMat = 🗿Matrix3::TransRota(aT);
+		🗿Matrix3 aMatInverse = 🗿Matrix3::Inverse(aMat);
+		🗿Vec2 bPosInv = aMatInverse * (bT.position);
 
-		return true;
+		return AABBCircleOverlap(a.ToAABB(🗿Vec2()), b, bPosInv);
 	};
 
 	export bool BoxOverlap(const 🗿Box& a, const 🗿Box& b, const 🗿Transform& aT, const 🗿Transform& bT)
