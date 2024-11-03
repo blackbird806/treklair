@@ -11,7 +11,7 @@
 
 import treklair;
 
-constexpr int gameSizeX = 640;
+constexpr int gameSizeX = 720;
 constexpr int gameSizeY = 480;
 constexpr float gameAspectRatio = (float)gameSizeX / gameSizeY;
 
@@ -37,6 +37,7 @@ int main(int argc, char** argv)
 	SDL_Texture* renderTarget = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, gameSizeX, gameSizeY);
 	SDL_SetTextureScaleMode(renderTarget, SDL_SCALEMODE_NEAREST);
 
+
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -54,10 +55,10 @@ int main(int argc, char** argv)
 
 	bool done = false;
 	std::unordered_map<SDL_Keycode, bool> input_map;
-
-	World world(20, 10);
-	Camera camera;
-
+	
+	GameRenderer gameRenderer;
+	gameRenderer.sdl_renderer = renderer;
+	World world(1, 1);
 	while (!done)
 	{
 		SDL_Event event;
@@ -89,28 +90,28 @@ int main(int argc, char** argv)
 		if (show_demo_window)
 			ImGui::ShowDemoWindow(&show_demo_window);
 
+		SDL_SetRenderLogicalPresentation(renderer, gameSizeX, gameSizeY, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 		SDL_SetRenderTarget(renderer, renderTarget);
 		SDL_RenderClear(renderer);
 
 		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-		world.draw(renderer, camera);
+		gameRenderer.drawWorld(world);
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
 		SDL_SetRenderTarget(renderer, nullptr);
+		SDL_RenderClear(renderer);
+
 		// TODO call only on resize
 		{
 			int w, h;
 			SDL_GetCurrentRenderOutputSize(renderer, &w, &h);
-
-			if (w > h)
-				w = h * gameAspectRatio;
-			else
-				h = w / gameAspectRatio;
-
-			gScaleFactor = (float)w / gameSizeX;
-
+			SDL_SetRenderLogicalPresentation(renderer, w, h, SDL_LOGICAL_PRESENTATION_DISABLED);
 			SDL_RenderTexture(renderer, renderTarget, nullptr, nullptr);
 		}
+		ImGui::Begin("hello");
+		ImGui::Button("test");
+		ImGui::End();
+
 		// Rendering
 		ImGui::Render();
 		//SDL_RenderSetScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
