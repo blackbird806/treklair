@@ -1,6 +1,8 @@
 export module treklair;
 
+export import :globals;
 export import :player;
 export import :world;
-export import :renderer;
+export import :gameRenderer;
+export import :engineRenderer;
 

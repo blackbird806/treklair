@@ -2,9 +2,10 @@ module;
 #include <SDL3/SDL.h>
 #include "vec2.h"
 
-export module treklair:renderer;
+export module treklair:gameRenderer;
 
 import :world;
+import :globals;
 
 export inline float gScaleFactor;
 
@@ -51,8 +52,6 @@ export struct GameRenderer
 			i++;
 		}
 	}
-
-	SDL_Renderer* sdl_renderer;
 	Camera camera;
 };
 

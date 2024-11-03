@@ -11,10 +11,6 @@
 
 import treklair;
 
-constexpr int gameSizeX = 720;
-constexpr int gameSizeY = 480;
-constexpr float gameAspectRatio = (float)gameSizeX / gameSizeY;
-
 int main(int argc, char** argv)
 {
 	std::print("hello {}", "world");
@@ -24,40 +20,23 @@ int main(int argc, char** argv)
 		std::print("failed to init sdl");
 		return -1;
 	}
-	SDL_Window* window;
-	SDL_Renderer* renderer;
 
-	if (!SDL_CreateWindowAndRenderer("treklair", 1280, 720, SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY, &window, &renderer))
+	if (!SDL_CreateWindowAndRenderer("treklair", 1280, 720, SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY, &sdl_window, &sdl_renderer))
 	{
 		std::print("failed to create renderer and window");
 		return -1;
 	}
 
 	// game rendertarget
-	SDL_Texture* renderTarget = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, gameSizeX, gameSizeY);
+	SDL_Texture* renderTarget = SDL_CreateTexture(sdl_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, gameSizeX, gameSizeY);
 	SDL_SetTextureScaleMode(renderTarget, SDL_SCALEMODE_NEAREST);
 
-
-	// Setup Dear ImGui context
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-
-	// Setup Dear ImGui style
-	ImGui::StyleColorsDark();
-
-	// Setup Platform/Renderer backends
-	ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
-	ImGui_ImplSDLRenderer3_Init(renderer);
-	bool show_demo_window = false;
-
+	EngineRenderer engineRenderer;
+	engineRenderer.initImgui();
 	bool done = false;
 	std::unordered_map<SDL_Keycode, bool> input_map;
 	
 	GameRenderer gameRenderer;
-	gameRenderer.sdl_renderer = renderer;
 	World world(1, 1);
 	while (!done)
 	{
@@ -70,7 +49,7 @@ int main(int argc, char** argv)
 			if (event.type == SDL_EVENT_QUIT)
 				done = true;
 
-			else if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && event.window.windowID == SDL_GetWindowID(window))
+			else if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && event.window.windowID == SDL_GetWindowID(sdl_window))
 				done = true;
 
 			else if (event.type == SDL_EVENT_KEY_DOWN)
@@ -82,53 +61,41 @@ int main(int argc, char** argv)
 				input_map[event.key.key] = false;
 			}
 		}
+		
+		engineRenderer.startFrame();
 
-		ImGui_ImplSDLRenderer3_NewFrame();
-		ImGui_ImplSDL3_NewFrame();
-		ImGui::NewFrame();
+		SDL_SetRenderLogicalPresentation(sdl_renderer, gameSizeX, gameSizeY, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+		SDL_SetRenderTarget(sdl_renderer, renderTarget);
+		SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 0, 255);
+		SDL_RenderClear(sdl_renderer);
 
-		if (show_demo_window)
-			ImGui::ShowDemoWindow(&show_demo_window);
-
-		SDL_SetRenderLogicalPresentation(renderer, gameSizeX, gameSizeY, SDL_LOGICAL_PRESENTATION_LETTERBOX);
-		SDL_SetRenderTarget(renderer, renderTarget);
-		SDL_RenderClear(renderer);
-
-		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+		SDL_SetRenderDrawColor(sdl_renderer, 255, 0, 0, 255);
 		gameRenderer.drawWorld(world);
-		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+		SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 0, 255);
 
-		SDL_SetRenderTarget(renderer, nullptr);
-		SDL_RenderClear(renderer);
+		SDL_SetRenderTarget(sdl_renderer, nullptr);
+		SDL_SetRenderDrawColor(sdl_renderer, 10, 10, 10, 255);
+		SDL_RenderClear(sdl_renderer);
 
 		// TODO call only on resize
 		{
 			int w, h;
-			SDL_GetCurrentRenderOutputSize(renderer, &w, &h);
-			SDL_SetRenderLogicalPresentation(renderer, w, h, SDL_LOGICAL_PRESENTATION_DISABLED);
-			SDL_RenderTexture(renderer, renderTarget, nullptr, nullptr);
+			SDL_GetCurrentRenderOutputSize(sdl_renderer, &w, &h);
+			SDL_SetRenderLogicalPresentation(sdl_renderer, w, h, SDL_LOGICAL_PRESENTATION_DISABLED);
+			SDL_RenderTexture(sdl_renderer, renderTarget, nullptr, nullptr);
 		}
 		ImGui::Begin("hello");
 		ImGui::Button("test");
 		ImGui::End();
 
-		// Rendering
-		ImGui::Render();
-		//SDL_RenderSetScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
-		//SDL_SetRenderDrawColorFloat(renderer, clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-		//SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-		//SDL_RenderClear(renderer);
-		ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
-		SDL_RenderPresent(renderer);
+		engineRenderer.draw();
 	}
 
-	ImGui_ImplSDLRenderer3_Shutdown();
-	ImGui_ImplSDL3_Shutdown();
-	ImGui::DestroyContext();
+	engineRenderer.destroyImgui();
 
 	SDL_DestroyTexture(renderTarget);
-	SDL_DestroyRenderer(renderer);
-	SDL_DestroyWindow(window);
+	SDL_DestroyRenderer(sdl_renderer);
+	SDL_DestroyWindow(sdl_window);
 
     return 0;
 }
