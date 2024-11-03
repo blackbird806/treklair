@@ -2,9 +2,9 @@
 
 #include <cassert>
 #include <vector>
-#include "vec2.h"
 
 export module treklair:world;
+import maths;
 
 export enum class TileType
 {

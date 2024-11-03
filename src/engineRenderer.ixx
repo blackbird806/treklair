@@ -1,6 +1,5 @@
 module;
 #include <SDL3/SDL.h>
-#include "vec2.h"
 #include "imgui.h"
 #include "backends/imgui_impl_sdl3.h"
 #include "backends/imgui_impl_sdlrenderer3.h"
@@ -8,6 +7,7 @@ module;
 export module treklair:engineRenderer;
 
 import :globals;
+import maths;
 
 static bool show_demo_window = false;
 

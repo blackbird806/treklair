@@ -1,17 +1,17 @@
-module;
+﻿module;
 #include <SDL3/SDL.h>
-#include "vec2.h"
 
 export module treklair:gameRenderer;
 
 import :world;
 import :globals;
+import maths;
 
 export inline float gScaleFactor;
 
 export struct Camera
 {
-	vec2 pos;
+	🗿Vec2 pos;
 	float speed = 100;
 
 	int worldToScreenX(int x) const noexcept
