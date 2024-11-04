@@ -8,6 +8,11 @@ export module maths:vec2;
 
 export struct 🗿Vec2
 {
+	static const 🗿Vec2 Right;
+	static const 🗿Vec2 Left;
+	static const 🗿Vec2 Up;
+	static const 🗿Vec2 Down;
+
 	constexpr 🗿Vec2() noexcept : x(0), y(0)
 	{
 	}
@@ -156,6 +161,7 @@ export struct 🗿Vec2
 		return v;
 	}
 
+
 	static bool approxEqu(🗿Vec2 v1, 🗿Vec2 v2, float delta) noexcept
 	{
 		return (v1 - v2).length() < delta;
@@ -166,6 +172,19 @@ export struct 🗿Vec2
 		return 🗿Vec2(std::clamp(test.x, min.x, max.x), std::clamp(test.y, min.y, max.y));
 	}
 
+	static inline 🗿Vec2 rotate(🗿Vec2 vec, float angle)
+	{
+		🗿Vec2 rotated;
+		rotated.x = std::cos(angle) * vec.x - std::sin(angle) * vec.y;
+		rotated.y = std::sin(angle) * vec.x + std::cos(angle) * vec.y;
+		return rotated;
+	}
+
+	🗿Vec2 rotated(float angle)
+	{
+		*this = rotate(*this, angle);
+	}
+
 	union
 	{
 		float data[2];
@@ -173,3 +192,8 @@ export struct 🗿Vec2
 		struct { float r, g; };
 	};
 };
+
+const 🗿Vec2 🗿Vec2::Right =	🗿Vec2(1.0f, 0.0f);
+const 🗿Vec2 🗿Vec2::Left =		🗿Vec2(-1.0f, 0.0f);
+const 🗿Vec2 🗿Vec2::Up =		🗿Vec2(0.0f, 1.0f);
+const 🗿Vec2 🗿Vec2::Down =		🗿Vec2(0.0f, -1.0f);

@@ -1,5 +1,6 @@
 ﻿module;
 #include <algorithm>
+#include <print>
 export module physics:shapes;
 import maths;
 
@@ -82,7 +83,67 @@ namespace physics {
 		return AABBCircleOverlap(a.ToAABB(🗿Vec2()), b, bPosInv);
 	};
 
+	bool ProjectOnAxis(🗿Vec2 axis, 🗿Vec2 corners[4], float halfSize)
+	{
+		float bProjs[4];
+		float bMinProj = FLT_MAX;
+		float bMaxProj = -FLT_MAX;
+		for (int i = 0; i < 4; i++)
+		{
+			bProjs[i] = axis.dot(corners[i]);
+			if (bProjs[i] < bMinProj)
+				bMinProj = bProjs[i];
+			if (bProjs[i] > bMaxProj)
+				bMaxProj = bProjs[i];
+		}
+
+		return  bMinProj < -halfSize && bMaxProj < -halfSize || bMinProj > halfSize && bMaxProj > halfSize;
+	}
+
+	bool BoxSAT(const 🗿Box& a, const 🗿Box& b, const 🗿Transform& aT, const 🗿Transform& bT)
+	{
+		//first box SAT
+		🗿Vec2 right = aT.Rotate(🗿Vec2::Right);
+		🗿Vec2 up = aT.Rotate(🗿Vec2::Up);
+
+		//Calculate b corner position relative to a
+		🗿Vec2 bRa = bT.position - aT.position;
+		🗿Vec2 bCorners[4];
+		bCorners[0] = bT.Rotate(b.halfSize); //RU
+
+		bCorners[1] = b.halfSize; //RD
+		bCorners[1].y = -b.halfSize.y;
+		bCorners[1] = bT.Rotate(bCorners[1]);
+
+		bCorners[2] = -bCorners[1] + bRa; //LU
+		bCorners[3] = -bCorners[0] + bRa; //LD
+		bCorners[0] += bRa;
+		bCorners[1] += bRa;
+
+		//Project corners Right axis
+		if (ProjectOnAxis(right, bCorners, a.halfSize.x))
+			return false;
+		if (ProjectOnAxis(up, bCorners, a.halfSize.y))
+			return false;
+
+		return true;
+	}
+
 	export bool BoxOverlap(const 🗿Box& a, const 🗿Box& b, const 🗿Transform& aT, const 🗿Transform& bT)
+	{
+		//Bounding sphere distance check for quick check opti
+		if((a.halfSize.sqrLength() + b.halfSize.sqrLength()) * 2 < (bT.position - aT.position).sqrLength())
+			return false;
+
+		if (!BoxSAT(a, b, aT, bT))
+			return false;
+		if (!BoxSAT(b, a, bT, aT))
+			return false;
+
+		return true;
+	}
+
+	export float AABBRayOverlap(const 🗿AABB& a, 🗿Vec2 begin, 🗿Vec2 end)
 	{
 		return false;
 	}

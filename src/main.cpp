@@ -98,21 +98,24 @@ int main(int argc, char** argv)
 			SDL_RenderTexture(sdl_renderer, renderTarget, nullptr, nullptr);
 		}
 
-		c.transform.position = mousePos;
+		b2.transform.position = mousePos;
 		b.transform.rotation += 0.0005;
+		b2.transform.rotation -= 0.0002;
 		//aabb2.min = mousePos - 🗿Vec2(50, 50);
 		//aabb2.max = mousePos + 🗿Vec2(50,50);
 		//if(physics::AABBOverlap(aabb, aabb2))
-		if (physics::BoxCircleOverlap(b.box, c.circle, b.transform, c.transform))
+		//if (physics::BoxCircleOverlap(b.box, c.circle, b.transform, c.transform))
+		if (physics::BoxOverlap(b.box, b2.box, b.transform, b2.transform))
+		//if (physics::BoxOverlap(b2.box, b.box, b2.transform, b.transform))
 		//if (physics::CircleOverlap(c.circle, c2.circle, c.transform, c2.transform))
 			SDL_SetRenderDrawColor(sdl_renderer, 255, 0, 0, 255);
 		else
 			SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 255, 255);
 
-		quickdraw::DrawRigidbody(c);
 		quickdraw::DrawRigidbody(b);
+		quickdraw::DrawRigidbody(b2);
 		//quickdraw::DrawRigidbody(c2);
-		quickdraw::DrawAABB(aabb);
+		//quickdraw::DrawAABB(aabb);
 		//quickdraw::DrawAABB(aabb2);
 
 		engineRenderer.engineUI();
