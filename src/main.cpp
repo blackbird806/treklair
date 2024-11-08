@@ -26,18 +26,13 @@ int main(int argc, char** argv)
 		std::print("failed to create renderer and window");
 		return -1;
 	}
-
-	// game rendertarget
-	SDL_Texture* renderTarget = SDL_CreateTexture(sdl_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, gameSizeX, gameSizeY);
-	SDL_SetTextureScaleMode(renderTarget, SDL_SCALEMODE_NEAREST);
-
+	
 	EngineRenderer engineRenderer;
 	engineRenderer.initImgui();
 	bool done = false;
 	std::unordered_map<SDL_Keycode, bool> input_map;
-	
-	GameRenderer gameRenderer;
 	World world(1, 1);
+	engineRenderer.worldEditor.world = &world;
 	while (!done)
 	{
 		SDL_Event event;
@@ -64,38 +59,13 @@ int main(int argc, char** argv)
 		
 		engineRenderer.startFrame();
 
-		SDL_SetRenderLogicalPresentation(sdl_renderer, gameSizeX, gameSizeY, SDL_LOGICAL_PRESENTATION_LETTERBOX);
-		SDL_SetRenderTarget(sdl_renderer, renderTarget);
-		SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 0, 255);
-		SDL_RenderClear(sdl_renderer);
-
-		SDL_SetRenderDrawColor(sdl_renderer, 255, 0, 0, 255);
-		gameRenderer.drawWorld(world);
-		SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 0, 255);
-
-		SDL_SetRenderTarget(sdl_renderer, nullptr);
-		SDL_SetRenderDrawColor(sdl_renderer, 10, 10, 10, 255);
-		SDL_RenderClear(sdl_renderer);
-
-		// TODO call only on resize
-		{
-			int w, h;
-			SDL_GetCurrentRenderOutputSize(sdl_renderer, &w, &h);
-			SDL_SetRenderLogicalPresentation(sdl_renderer, w, h, SDL_LOGICAL_PRESENTATION_DISABLED);
-			SDL_RenderTexture(sdl_renderer, renderTarget, nullptr, nullptr);
-		}
 		engineRenderer.engineUI();
-
-		ImGui::Begin("hello", nullptr);
-		ImGui::Button("test");
-		ImGui::End();
 
 		engineRenderer.draw();
 	}
 
 	engineRenderer.destroyImgui();
 
-	SDL_DestroyTexture(renderTarget);
 	SDL_DestroyRenderer(sdl_renderer);
 	SDL_DestroyWindow(sdl_window);
 

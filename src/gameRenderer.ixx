@@ -4,39 +4,18 @@ module;
 
 export module treklair:gameRenderer;
 
-import :world;
 import :globals;
-
-export inline float gScaleFactor;
-
-export struct Camera
-{
-	vec2 pos;
-	float speed = 100;
-
-	int worldToScreenX(int x) const noexcept
-	{
-		return x - pos.x;
-	}
-
-	int worldToScreenY(int y) const noexcept
-	{
-		return y - pos.y;
-	}
-
-	int screenToWorldX(int x) const noexcept
-	{
-		return (x / gScaleFactor) + pos.x;
-	}
-
-	int screenToWorldY(int y) const noexcept
-	{
-		return (y / gScaleFactor) + pos.y;
-	}
-};
+import :world;
+import :camera;
 
 export struct GameRenderer
 {
+	void init()
+	{
+		mainRenderTarget = SDL_CreateTexture(sdl_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, gameSizeX, gameSizeY);
+		SDL_SetTextureScaleMode(mainRenderTarget, SDL_SCALEMODE_NEAREST);
+	}
+
 	void drawWorld(World const& world) const
 	{
 		for (int i = 0; auto const& tile : world.tiles)
@@ -52,6 +31,26 @@ export struct GameRenderer
 			i++;
 		}
 	}
+
+	void drawGame(World const& world)
+	{
+		SDL_SetRenderLogicalPresentation(sdl_renderer, gameSizeX, gameSizeY, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+		SDL_SetRenderTarget(sdl_renderer, mainRenderTarget);
+		SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 0, 255);
+		SDL_RenderClear(sdl_renderer);
+
+		SDL_SetRenderDrawColor(sdl_renderer, 255, 0, 0, 255);
+		drawWorld(world);
+		SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 0, 255);
+	}
+
+	~GameRenderer()
+	{
+		if (mainRenderTarget)
+			SDL_DestroyTexture(mainRenderTarget);
+	}
+
 	Camera camera;
+	SDL_Texture* mainRenderTarget = nullptr;
 };
 
