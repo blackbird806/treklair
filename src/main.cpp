@@ -13,7 +13,7 @@ import treklair;
 
 int main(int argc, char** argv)
 {
-	std::print("hello {}", "world");
+	std::print("hello {}\n", "world");
 
 	if (!SDL_Init(SDL_INIT_VIDEO))
 	{
@@ -31,7 +31,7 @@ int main(int argc, char** argv)
 	engineRenderer.initImgui();
 	bool done = false;
 	std::unordered_map<SDL_Keycode, bool> input_map;
-	World world(1, 1);
+	World world(10, 10);
 	engineRenderer.worldEditor.world = &world;
 	while (!done)
 	{
