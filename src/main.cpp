@@ -22,7 +22,6 @@ int main(int argc, char** argv)
 	c2.transform.position = 🗿Vec2(200, 200);
 	b.transform.position = 🗿Vec2(300, 300);
 
-
 	std::print("hello {}", "world");
 
 	if (!SDL_Init(SDL_INIT_VIDEO))
@@ -98,19 +97,24 @@ int main(int argc, char** argv)
 			SDL_RenderTexture(sdl_renderer, renderTarget, nullptr, nullptr);
 		}
 
+		🗿Contact contacts[2];
 		b2.transform.position = mousePos;
-		b.transform.rotation += 0.0005;
-		b2.transform.rotation -= 0.0002;
+		b.transform.rotation = 1;
+		b2.transform.rotation = 2;
 		//aabb2.min = mousePos - 🗿Vec2(50, 50);
 		//aabb2.max = mousePos + 🗿Vec2(50,50);
 		//if(physics::AABBOverlap(aabb, aabb2))
 		//if (physics::BoxCircleOverlap(b.box, c.circle, b.transform, c.transform))
-		if (physics::BoxOverlap(b.box, b2.box, b.transform, b2.transform))
+		int contactCount = physics::BoxOverlap(b.box, b2.box, b.transform, b2.transform, contacts);
+		if (contactCount > 1)
 		//if (physics::BoxOverlap(b2.box, b.box, b2.transform, b.transform))
 		//if (physics::CircleOverlap(c.circle, c2.circle, c.transform, c2.transform))
 			SDL_SetRenderDrawColor(sdl_renderer, 255, 0, 0, 255);
 		else
 			SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 255, 255);
+
+		for (int i = 0; i < contactCount; i++)
+			quickdraw::DrawContact(contacts[i]);
 
 		quickdraw::DrawRigidbody(b);
 		quickdraw::DrawRigidbody(b2);

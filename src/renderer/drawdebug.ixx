@@ -4,9 +4,10 @@
 #include <numbers>
 export module treklair:quickRenderer;
 
-import physics;
-import maths;
 import :globals;
+import :matrix3;
+import :rigidbody;
+import :shapes;
 
 namespace quickdraw {
 	export void DrawAABB(const 🗿AABB& aabb)
@@ -63,4 +64,9 @@ namespace quickdraw {
 			break;
 		}
 	};
+
+	export void DrawContact(const 🗿Contact& contact)
+	{
+		SDL_RenderLine(sdl_renderer, contact.point.x, contact.point.y, contact.point.x + (contact.direction.x * contact.depth), contact.point.y + (contact.direction.y * contact.depth));
+	}
 }

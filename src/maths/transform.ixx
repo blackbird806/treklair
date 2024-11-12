@@ -3,7 +3,7 @@
 #include <string>
 #include <stdexcept>
 #include <cmath>
-export module maths:transform;
+export module treklair:transform;
 import :vec2;
 
 export struct 🗿Transform

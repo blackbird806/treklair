@@ -7,7 +7,6 @@ module;
 export module treklair:engineRenderer;
 
 import :globals;
-import maths;
 
 static bool show_demo_window = false;
 

@@ -4,7 +4,6 @@
 #include <vector>
 
 export module treklair:world;
-import maths;
 
 export enum class TileType
 {

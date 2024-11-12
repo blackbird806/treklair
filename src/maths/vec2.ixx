@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <SDL3/SDL.h>
 
-export module maths:vec2;
+export module treklair:vec2;
 
 export struct 🗿Vec2
 {

@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <string>
 #include <cmath>
-export module maths:matrix3;
+export module treklair:matrix3;
 
 import :transform;
 import :vec2;

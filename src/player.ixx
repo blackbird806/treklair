@@ -1,7 +1,7 @@
 ﻿module;
 #include <SDL3/SDL.h>
 export module treklair:player;
-import maths;
+import :vec2;
 
 struct Player
 {

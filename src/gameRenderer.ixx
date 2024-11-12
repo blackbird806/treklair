@@ -5,7 +5,7 @@ export module treklair:gameRenderer;
 
 import :world;
 import :globals;
-import maths;
+import :vec2;
 
 export inline float gScaleFactor;
 

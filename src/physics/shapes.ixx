@@ -1,8 +1,19 @@
 ﻿module;
 #include <algorithm>
 #include <print>
-export module physics:shapes;
-import maths;
+#include <SDL3/SDL_render.h>
+export module treklair:shapes;
+
+import :matrix3;
+import :vec2;
+import :globals;
+
+export struct 🗿Contact
+{
+	🗿Vec2 point;
+	🗿Vec2 direction;
+	float depth;
+};
 
 export enum 🗿ShapeType
 {
@@ -83,30 +94,72 @@ namespace physics {
 		return AABBCircleOverlap(a.ToAABB(🗿Vec2()), b, bPosInv);
 	};
 
-	bool ProjectOnAxis(🗿Vec2 axis, 🗿Vec2 corners[4], float halfSize)
+	bool ProjectOnAxis(🗿Vec2 axis, 🗿Vec2 corners[4], float halfSize, float& depth, int& cornerContactIndex)
 	{
 		float bProjs[4];
 		float bMinProj = FLT_MAX;
 		float bMaxProj = -FLT_MAX;
+		int minProjIndex;
+		int maxProjIndex;
 		for (int i = 0; i < 4; i++)
 		{
 			bProjs[i] = axis.dot(corners[i]);
 			if (bProjs[i] < bMinProj)
+			{
 				bMinProj = bProjs[i];
+				minProjIndex = i;
+			}
 			if (bProjs[i] > bMaxProj)
+			{
 				bMaxProj = bProjs[i];
+				maxProjIndex = i;
+			}
 		}
 
-		return  bMinProj < -halfSize && bMaxProj < -halfSize || bMinProj > halfSize && bMaxProj > halfSize;
+		SDL_SetRenderDrawColor(sdl_renderer, 255, 255, 0, 255);
+		SDL_RenderLine(sdl_renderer, 500 + axis.x * bMinProj, 500 + axis.y * bMinProj, 500 + axis.x * bMaxProj, 500 + axis.y * bMaxProj);
+		SDL_RenderLine(sdl_renderer, 500 + axis.x * -halfSize, 500 + axis.y * -halfSize, 500 + axis.x * halfSize, 500 + axis.y * halfSize);
+
+		if (bMinProj > -halfSize && bMinProj < halfSize)
+		{
+			cornerContactIndex = minProjIndex;
+			depth = std::abs(halfSize - bMinProj);
+			return true;
+		}
+		if (bMaxProj > -halfSize && bMaxProj < halfSize)
+		{
+			cornerContactIndex = maxProjIndex;
+			depth = std::abs(bMaxProj + halfSize); //- - halfsize
+			return true;
+		}
+		if (bMinProj < -halfSize && bMaxProj > halfSize)
+		{
+			float minProjDif = -bMinProj - halfSize;
+			float maxProjDif = bMaxProj - halfSize;
+			if (minProjDif < maxProjDif)
+			{
+				//min proj shortest
+				cornerContactIndex = minProjIndex;
+				depth = minProjDif;
+				return true;
+			}
+			else
+			{
+				cornerContactIndex = maxProjIndex;
+				depth = maxProjDif;
+				return true;
+			}
+		}
+		return false;
 	}
 
-	bool BoxSAT(const 🗿Box& a, const 🗿Box& b, const 🗿Transform& aT, const 🗿Transform& bT)
+	bool BoxSAT(const 🗿Box& a, const 🗿Box& b, const 🗿Transform& aT, const 🗿Transform& bT, 🗿Contact& contact)
 	{
 		//first box SAT
 		🗿Vec2 right = aT.Rotate(🗿Vec2::Right);
 		🗿Vec2 up = aT.Rotate(🗿Vec2::Up);
 
-		//Calculate b corner position relative to a
+		//Calculate b corners position relative to a
 		🗿Vec2 bRa = bT.position - aT.position;
 		🗿Vec2 bCorners[4];
 		bCorners[0] = bT.Rotate(b.halfSize); //RU
@@ -120,27 +173,45 @@ namespace physics {
 		bCorners[0] += bRa;
 		bCorners[1] += bRa;
 
-		//Project corners Right axis
-		if (ProjectOnAxis(right, bCorners, a.halfSize.x))
-			return false;
-		if (ProjectOnAxis(up, bCorners, a.halfSize.y))
-			return false;
+		float depth;
+		int cornerContactIndex;
+		//Project corners on axes
+		if (ProjectOnAxis(right, bCorners, a.halfSize.x, depth, cornerContactIndex) && ProjectOnAxis(up, bCorners, a.halfSize.y, depth, cornerContactIndex))
+		{
+			🗿Matrix3 translate = 🗿Matrix3::Translation(aT.position);
 
-		return true;
+			contact.point = translate  * (bCorners[cornerContactIndex]);
+			contact.depth = depth;
+			contact.direction =  up;
+
+			return true;
+		}/*
+		if ()
+		{
+			🗿Matrix3 translate = 🗿Matrix3::Translation(aT.position);
+
+			contact.point = translate * (bCorners[cornerContactIndex]);
+			contact.depth = depth;
+			contact.direction = up;
+			return true;
+		}*/
+
+		return false;
 	}
 
-	export bool BoxOverlap(const 🗿Box& a, const 🗿Box& b, const 🗿Transform& aT, const 🗿Transform& bT)
+	export int BoxOverlap(const 🗿Box& a, const 🗿Box& b, const 🗿Transform& aT, const 🗿Transform& bT, 🗿Contact* contacts)
 	{
 		//Bounding sphere distance check for quick check opti
-		if((a.halfSize.sqrLength() + b.halfSize.sqrLength()) * 2 < (bT.position - aT.position).sqrLength())
+		if ((a.halfSize.sqrLength() + b.halfSize.sqrLength()) * 2 < (bT.position - aT.position).sqrLength())
 			return false;
 
-		if (!BoxSAT(a, b, aT, bT))
-			return false;
-		if (!BoxSAT(b, a, bT, aT))
-			return false;
+		int contactCount = 0;
+		if (BoxSAT(a, b, aT, bT, contacts[contactCount]))
+			contactCount++;
+		if (BoxSAT(b, a, bT, aT, contacts[contactCount]))
+			contactCount++;
 
-		return true;
+		return contactCount;
 	}
 
 	export float AABBRayOverlap(const 🗿AABB& a, 🗿Vec2 begin, 🗿Vec2 end)

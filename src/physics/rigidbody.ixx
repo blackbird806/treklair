@@ -1,6 +1,5 @@
-﻿export module physics:rigidbody;
+﻿export module treklair:rigidbody;
 import :shapes;
-import maths;
 
 export class 🗿Rigidbody
 {
