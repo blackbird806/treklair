@@ -1,53 +1,53 @@
 ﻿export module treklair:rigidbody;
 import :shapes;
 
-export class 🗿Rigidbody
+export class Rigidbody
 {
 public:
 	union
 	{
-		🗿Box box;
-		🗿Circle circle;
+		Box box;
+		Circle circle;
 	};
 
-	🗿ShapeType shapeType;
+	ShapeType shapeType;
 	//Scale not taken in account
-	🗿Transform transform;
+	Transform transform;
 
-	🗿Vec2 linearVelocity;
+	Vec2 linearVelocity;
 	
 	//In radiants
 	float angularVelocity;
 	bool freezeRotation;
 	
-	🗿Vec2 centerOfGravity;
+	Vec2 centerOfGravity;
 	float mass = 1;
 
-	🗿Rigidbody(🗿ShapeType type)
+	Rigidbody(ShapeType type)
 	{
 		shapeType = type;
 		switch (shapeType)
 		{
-		case 🗿BoxShape:
-			box = 🗿Box();
+		case BoxShape:
+			box = Box();
 			break;
-		case 🗿CircleShape:
-			circle = 🗿Circle();
+		case CircleShape:
+			circle = Circle();
 			break;
 		default:
 			break;
 		}
 	}
 
-	🗿Rigidbody(const 🗿Box& _box)
+	Rigidbody(const Box& _box)
 	{
-		shapeType = 🗿BoxShape;
+		shapeType = BoxShape;
 		box = _box;
 	}
 
-	🗿Rigidbody(const 🗿Circle& _circle)
+	Rigidbody(const Circle& _circle)
 	{
-		shapeType = 🗿CircleShape;
+		shapeType = CircleShape;
 		circle = _circle;
 	}
 
@@ -68,12 +68,12 @@ public:
 		UpdateNoCCD(deltaTime);
 	};
 
-	void AddImpulse(🗿Vec2 impulse)
+	void AddImpulse(Vec2 impulse)
 	{
 		linearVelocity += impulse / mass;
 	};
 
-	void AddImpulseAtPos(🗿Vec2 impulse, 🗿Vec2 position)
+	void AddImpulseAtPos(Vec2 impulse, Vec2 position)
 	{
 		// ?? torque shit
 	};

@@ -11,7 +11,7 @@ export inline float gScaleFactor;
 
 export struct Camera
 {
-	🗿Vec2 pos;
+	Vec2 pos;
 	float speed = 100;
 
 	int worldToScreenX(int x) const noexcept

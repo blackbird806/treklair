@@ -8,57 +8,57 @@ import :matrix3;
 import :vec2;
 import :globals;
 
-export struct 🗿Contact
+export struct Contact
 {
-	🗿Vec2 point;
-	🗿Vec2 direction;
+	Vec2 point;
+	Vec2 direction;
 	float depth;
 };
 
-export enum 🗿ShapeType
+export enum ShapeType
 {
-	🗿CircleShape,
-	🗿BoxShape,
+	CircleShape,
+	BoxShape,
 };
 
-export struct 🗿AABB
+export struct AABB
 {
-	🗿Vec2 min;
-	🗿Vec2 max;
+	Vec2 min;
+	Vec2 max;
 };
 
-export inline 🗿Vec2 Center(const 🗿AABB& aabb)
+export inline Vec2 Center(const AABB& aabb)
 {
 	return (aabb.min + aabb.max) * 0.5f;
 };
 
-export inline 🗿Vec2 Bounds(const 🗿AABB& aabb)
+export inline Vec2 Bounds(const AABB& aabb)
 {
 	return (aabb.max - aabb.min) * 0.5f;
 };
 
-export inline 🗿Vec2 Size(const 🗿AABB& aabb)
+export inline Vec2 Size(const AABB& aabb)
 {
 	return (aabb.max - aabb.min);
 };
 
-export struct 🗿Circle
+export struct Circle
 {
 	float radius;
 };
 
-export struct 🗿Box
+export struct Box
 {
-	🗿Vec2 halfSize;
+	Vec2 halfSize;
 
-	🗿AABB ToAABB(🗿Vec2 position) const
+	AABB ToAABB(Vec2 position) const
 	{
-		return 🗿AABB(position - halfSize, position + halfSize);
+		return AABB(position - halfSize, position + halfSize);
 	}
 };
 
 namespace physics {
-	export bool AABBOverlap(const 🗿AABB& a, const 🗿AABB& b)
+	export bool AABBOverlap(const AABB& a, const AABB& b)
 	{
 		//If seperation along an axis detected return false
 		if (a.max.x < b.min.x || a.min.x > b.max.x) return false;
@@ -68,33 +68,33 @@ namespace physics {
 		return true;
 	};
 
-	export bool CircleOverlap(const 🗿Circle& a, const 🗿Circle& b, const 🗿Transform& aT, const 🗿Transform& bT)
+	export bool CircleOverlap(const Circle& a, const Circle& b, const Transform& aT, const Transform& bT)
 	{
 		float sqrDist = (bT.position - aT.position).sqrLength();
 		float radiusSum = a.radius + b.radius;
 		return (sqrDist <= radiusSum * radiusSum);
 	};
 
-	export bool AABBCircleOverlap(const 🗿AABB& a, const 🗿Circle& b, const 🗿Vec2& pT)
+	export bool AABBCircleOverlap(const AABB& a, const Circle& b, const Vec2& pT)
 	{
-		🗿Vec2 centerAABB = Center(a);
-		🗿Vec2 distance = pT - centerAABB;
-		🗿Vec2 boundsAABB = a.max - centerAABB;
-		🗿Vec2 clampDist = 🗿Vec2::clamp(distance, -boundsAABB, boundsAABB);
-		🗿Vec2 closestPoint = centerAABB + clampDist;
+		Vec2 centerAABB = Center(a);
+		Vec2 distance = pT - centerAABB;
+		Vec2 boundsAABB = a.max - centerAABB;
+		Vec2 clampDist = Vec2::clamp(distance, -boundsAABB, boundsAABB);
+		Vec2 closestPoint = centerAABB + clampDist;
 		return (closestPoint - pT).sqrLength() <= b.radius * b.radius;
 	};
 
-	export bool BoxCircleOverlap(const 🗿Box& a, const 🗿Circle& b, const 🗿Transform& aT, const 🗿Transform& bT)
+	export bool BoxCircleOverlap(const Box& a, const Circle& b, const Transform& aT, const Transform& bT)
 	{
-		🗿Matrix3 aMat = 🗿Matrix3::TransRota(aT);
-		🗿Matrix3 aMatInverse = 🗿Matrix3::Inverse(aMat);
-		🗿Vec2 bPosInv = aMatInverse * (bT.position);
+		Matrix3 aMat = Matrix3::transRota(aT);
+		Matrix3 aMatInverse = Matrix3::inverse(aMat);
+		Vec2 bPosInv = aMatInverse * (bT.position);
 
-		return AABBCircleOverlap(a.ToAABB(🗿Vec2()), b, bPosInv);
+		return AABBCircleOverlap(a.ToAABB(Vec2()), b, bPosInv);
 	};
 
-	bool ProjectOnAxis(🗿Vec2 axis, 🗿Vec2 corners[4], float halfSize, float& depth, int& cornerContactIndex)
+	bool ProjectOnAxis(Vec2 axis, Vec2 corners[4], float halfSize, float& depth, int& cornerContactIndex)
 	{
 		float bProjs[4];
 		float bMinProj = FLT_MAX;
@@ -116,9 +116,8 @@ namespace physics {
 			}
 		}
 
-		SDL_SetRenderDrawColor(sdl_renderer, 255, 255, 0, 255);
-		SDL_RenderLine(sdl_renderer, 500 + axis.x * bMinProj, 500 + axis.y * bMinProj, 500 + axis.x * bMaxProj, 500 + axis.y * bMaxProj);
-		SDL_RenderLine(sdl_renderer, 500 + axis.x * -halfSize, 500 + axis.y * -halfSize, 500 + axis.x * halfSize, 500 + axis.y * halfSize);
+		//SDL_RenderLine(sdl_renderer, 500 + axis.x * bMinProj, 500 + axis.y * bMinProj, 500 + axis.x * bMaxProj, 500 + axis.y * bMaxProj);
+		//SDL_RenderLine(sdl_renderer, 500 + axis.x * -halfSize, 500 + axis.y * -halfSize, 500 + axis.x * halfSize, 500 + axis.y * halfSize);
 
 		if (bMinProj > -halfSize && bMinProj < halfSize)
 		{
@@ -153,53 +152,52 @@ namespace physics {
 		return false;
 	}
 
-	bool BoxSAT(const 🗿Box& a, const 🗿Box& b, const 🗿Transform& aT, const 🗿Transform& bT, 🗿Contact& contact)
+	bool BoxSAT(const Box& a, const Box& b, const Transform& aT, const Transform& bT, Contact& contact)
 	{
 		//first box SAT
-		🗿Vec2 right = aT.Rotate(🗿Vec2::Right);
-		🗿Vec2 up = aT.Rotate(🗿Vec2::Up);
+		Vec2 axes[2];
+		axes[0] = aT.rotate(Vec2::Right);
+		axes[1] = aT.rotate(Vec2::Up);
+		Matrix3 translate = Matrix3::translation(aT.position);
 
 		//Calculate b corners position relative to a
-		🗿Vec2 bRa = bT.position - aT.position;
-		🗿Vec2 bCorners[4];
-		bCorners[0] = bT.Rotate(b.halfSize); //RU
+		Vec2 bRa = bT.position - aT.position;
+		Vec2 bCorners[4];
+		bCorners[0] = bT.rotate(b.halfSize); //RU
 
 		bCorners[1] = b.halfSize; //RD
 		bCorners[1].y = -b.halfSize.y;
-		bCorners[1] = bT.Rotate(bCorners[1]);
+		bCorners[1] = bT.rotate(bCorners[1]);
 
 		bCorners[2] = -bCorners[1] + bRa; //LU
 		bCorners[3] = -bCorners[0] + bRa; //LD
 		bCorners[0] += bRa;
 		bCorners[1] += bRa;
 
-		float depth;
-		int cornerContactIndex;
 		//Project corners on axes
-		if (ProjectOnAxis(right, bCorners, a.halfSize.x, depth, cornerContactIndex) && ProjectOnAxis(up, bCorners, a.halfSize.y, depth, cornerContactIndex))
+		float depth[2];
+		int cornerContactIndex[2];
+		contact.depth = FLT_MAX;
+		for (int i = 0; i < 2; i++)
 		{
-			🗿Matrix3 translate = 🗿Matrix3::Translation(aT.position);
+			if (!ProjectOnAxis(axes[i], bCorners, a.halfSize[i], depth[i], cornerContactIndex[i]))
+			{
+				contact = Contact();
+				return false;
+			}
 
-			contact.point = translate  * (bCorners[cornerContactIndex]);
-			contact.depth = depth;
-			contact.direction =  up;
+			if (depth[i] < contact.depth)
+			{
+				contact.point = translate * (bCorners[cornerContactIndex[i]]);
+				contact.depth = depth[i];
+				contact.direction = axes[i];
+			}
+		}
 
-			return true;
-		}/*
-		if ()
-		{
-			🗿Matrix3 translate = 🗿Matrix3::Translation(aT.position);
-
-			contact.point = translate * (bCorners[cornerContactIndex]);
-			contact.depth = depth;
-			contact.direction = up;
-			return true;
-		}*/
-
-		return false;
+		return true;
 	}
 
-	export int BoxOverlap(const 🗿Box& a, const 🗿Box& b, const 🗿Transform& aT, const 🗿Transform& bT, 🗿Contact* contacts)
+	export int BoxOverlap(const Box& a, const Box& b, const Transform& aT, const Transform& bT, Contact* contacts)
 	{
 		//Bounding sphere distance check for quick check opti
 		if ((a.halfSize.sqrLength() + b.halfSize.sqrLength()) * 2 < (bT.position - aT.position).sqrLength())
@@ -214,12 +212,12 @@ namespace physics {
 		return contactCount;
 	}
 
-	export float AABBRayOverlap(const 🗿AABB& a, 🗿Vec2 begin, 🗿Vec2 end)
+	export float AABBRayOverlap(const AABB& a, Vec2 begin, Vec2 end)
 	{
 		return false;
 	}
 
-	export bool AABBBoxOverlap(const 🗿AABB& a, const 🗿Box& b, const 🗿Transform& aT, const 🗿Transform& bT)
+	export bool AABBBoxOverlap(const AABB& a, const Box& b, const Transform& aT, const Transform& bT)
 	{
 		return false;
 	}

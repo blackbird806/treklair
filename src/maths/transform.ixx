@@ -6,15 +6,15 @@
 export module treklair:transform;
 import :vec2;
 
-export struct 🗿Transform
+export struct Transform
 {
-	🗿Vec2 position;
+	Vec2 position;
 	float rotation;
-	🗿Vec2 scale;
+	Vec2 scale;
 
-	🗿Vec2 Rotate(const 🗿Vec2& vec) const
+	Vec2 rotate(const Vec2& vec) const
 	{
-		🗿Vec2 rotated = 🗿Vec2::rotate(vec, rotation);
+		Vec2 rotated = Vec2::rotate(vec, rotation);
 		return rotated;
 	};
 };
