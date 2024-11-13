@@ -94,6 +94,23 @@ namespace physics {
 		return AABBCircleOverlap(a.ToAABB(Vec2()), b, bPosInv);
 	};
 
+	bool ProjectOnAxis(Vec2 axis, Vec2 corners[4], float halfSize)
+	{
+		float bProjs[4];
+		float bMinProj = FLT_MAX;
+		float bMaxProj = -FLT_MAX;
+		for (int i = 0; i < 4; i++)
+		{
+			bProjs[i] = axis.dot(corners[i]);
+			if (bProjs[i] < bMinProj)
+				bMinProj = bProjs[i];
+			if (bProjs[i] > bMaxProj)
+				bMaxProj = bProjs[i];
+		}
+
+		return  !(bMinProj < -halfSize && bMaxProj < -halfSize || bMinProj > halfSize && bMaxProj > halfSize);
+	}
+
 	bool ProjectOnAxis(Vec2 axis, Vec2 corners[4], float halfSize, float& depth, int& cornerContactIndex)
 	{
 		float bProjs[4];
@@ -152,6 +169,40 @@ namespace physics {
 		return false;
 	}
 
+	bool BoxSAT(const Box& a, const Box& b, const Transform& aT, const Transform& bT)
+	{
+		//first box SAT
+		Vec2 axes[2];
+		axes[0] = aT.rotate(Vec2::Right);
+		axes[1] = aT.rotate(Vec2::Up);
+
+		//Calculate b corners position relative to a
+		Vec2 bRa = bT.position - aT.position;
+		Vec2 bCorners[4];
+		bCorners[0] = bT.rotate(b.halfSize); //RU
+
+		bCorners[1] = b.halfSize; //RD
+		bCorners[1].y = -b.halfSize.y;
+		bCorners[1] = bT.rotate(bCorners[1]);
+
+		bCorners[2] = -bCorners[1] + bRa; //LU
+		bCorners[3] = -bCorners[0] + bRa; //LD
+		bCorners[0] += bRa;
+		bCorners[1] += bRa;
+
+		//Project corners on axes
+		for (int i = 0; i < 2; i++)
+		{
+			if (!ProjectOnAxis(axes[i], bCorners, a.halfSize[i]))
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+
 	bool BoxSAT(const Box& a, const Box& b, const Transform& aT, const Transform& bT, Contact& contact)
 	{
 		//first box SAT
@@ -195,6 +246,21 @@ namespace physics {
 		}
 
 		return true;
+	}
+
+	export bool BoxOverlap(const Box& a, const Box& b, const Transform& aT, const Transform& bT)
+	{
+		//Bounding sphere distance check for quick check opti
+		if ((a.halfSize.sqrLength() + b.halfSize.sqrLength()) * 2 < (bT.position - aT.position).sqrLength())
+			return false;
+
+		int contactCount = 0;
+		if (BoxSAT(a, b, aT, bT))
+			contactCount++;
+		if (BoxSAT(b, a, bT, aT))
+			contactCount++;
+
+		return contactCount > 1;
 	}
 
 	export int BoxOverlap(const Box& a, const Box& b, const Transform& aT, const Transform& bT, Contact* contacts)

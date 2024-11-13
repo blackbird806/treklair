@@ -101,35 +101,16 @@ int main(int argc, char** argv)
 		b2.transform.position = mousePos;
 		b.transform.rotation = 1.2;
 		b2.transform.rotation = 0;
-		//aabb2.min = mousePos - Vec2(50, 50);
-		//aabb2.max = mousePos + Vec2(50,50);
-		//if(physics::AABBOverlap(aabb, aabb2))
-		//if (physics::BoxCircleOverlap(b.box, c.circle, b.transform, c.transform))
 		SDL_SetRenderDrawColor(sdl_renderer, 255, 255, 0, 255);
-		int contactCount = physics::BoxOverlap(b.box, b2.box, b.transform, b2.transform, contacts);
 
-		if (contactCount > 1)
-			//if (physics::BoxOverlap(b2.box, b.box, b2.transform, b.transform))
-			//if (physics::CircleOverlap(c.circle, c2.circle, c.transform, c2.transform))
+		if (physics::BoxOverlap(b.box, b2.box, b.transform, b2.transform))
 			SDL_SetRenderDrawColor(sdl_renderer, 255, 0, 0, 255);
 		else
 			SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 255, 255);
 		quickdraw::DrawRigidbody(b);
 		quickdraw::DrawRigidbody(b2);
 
-		for (int i = 0; i < contactCount; i++)
-		{
-			if (i == 0)
-				SDL_SetRenderDrawColor(sdl_renderer, 0, 255, 0, 255);
-			if (i == 1)
-				SDL_SetRenderDrawColor(sdl_renderer, 255, 0, 255, 255);
-
-			quickdraw::DrawContact(contacts[i]);
-		}
-
-		//quickdraw::DrawRigidbody(c2);
-		//quickdraw::DrawAABB(aabb);
-		//quickdraw::DrawAABB(aabb2);
+		
 
 		engineRenderer.engineUI();
 
