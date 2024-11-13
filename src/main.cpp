@@ -8,11 +8,16 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
+#include <string>
 
 import treklair;
 
 int main(int argc, char** argv)
 {
+	Uint64 timeNow = SDL_GetPerformanceCounter();
+	Uint64 timeLast = 0;
+	float deltaTime = 0;
+
 	AABB aabb = AABB({ 100,100 }, { 150,150 });
 	AABB aabb2 = AABB({ 100,100 }, { 130,150 });
 	Rigidbody c = Rigidbody(Circle(50));
@@ -51,6 +56,12 @@ int main(int argc, char** argv)
 	World world(1, 1);
 	while (!done)
 	{
+		timeLast = timeNow;
+		timeNow = SDL_GetPerformanceCounter();
+		deltaTime = (float)((timeNow - timeLast) / (float)SDL_GetPerformanceFrequency());
+
+		SDL_SetWindowTitle(sdl_window, ("treklair dt : " + std::to_string(deltaTime)).c_str());
+
 		SDL_Event event;
 
 		while (SDL_PollEvent(&event))
@@ -101,17 +112,21 @@ int main(int argc, char** argv)
 		b2.transform.position = mousePos;
 		b.transform.rotation = 1.2;
 		b2.transform.rotation = 0;
+
+		b.linearVelocity.y += gravity * deltaTime;
 		SDL_SetRenderDrawColor(sdl_renderer, 255, 255, 0, 255);
 
 		if (physics::BoxOverlap(b.box, b2.box, b.transform, b2.transform))
+		{
+			b.linearVelocity = Vec2::Zero;
 			SDL_SetRenderDrawColor(sdl_renderer, 255, 0, 0, 255);
+		}
 		else
 			SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 255, 255);
 		quickdraw::DrawRigidbody(b);
 		quickdraw::DrawRigidbody(b2);
 
-		
-
+		b.Update(deltaTime);
 		engineRenderer.engineUI();
 
 		ImGui::Begin("hello", nullptr);

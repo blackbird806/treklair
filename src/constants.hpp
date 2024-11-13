@@ -1,1 +1,0 @@
-constexpr float gravity = 10;

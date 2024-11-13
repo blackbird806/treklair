@@ -12,6 +12,8 @@ export struct Vec2
 	static const Vec2 Left;
 	static const Vec2 Up;
 	static const Vec2 Down;
+	static const Vec2 Zero;
+	static const Vec2 One;
 
 	constexpr Vec2() noexcept : x(0), y(0)
 	{
@@ -197,3 +199,5 @@ const Vec2 Vec2::Right =	Vec2(1.0f, 0.0f);
 const Vec2 Vec2::Left =		Vec2(-1.0f, 0.0f);
 const Vec2 Vec2::Up =		Vec2(0.0f, 1.0f);
 const Vec2 Vec2::Down =		Vec2(0.0f, -1.0f);
+const Vec2 Vec2::Zero =		Vec2(0.0f, 0.0f);
+const Vec2 Vec2::One =		Vec2(1.0f, 1.0f);
