@@ -108,7 +108,7 @@ int main(int argc, char** argv)
 			SDL_RenderTexture(sdl_renderer, renderTarget, nullptr, nullptr);
 		}
 
-		Contact contacts[2];
+		std::vector<Contact> contacts;
 		b2.transform.position = mousePos;
 		b.transform.rotation = 1.2;
 		b2.transform.rotation = 0;
@@ -116,17 +116,28 @@ int main(int argc, char** argv)
 		b.linearVelocity.y += gravity * deltaTime;
 		SDL_SetRenderDrawColor(sdl_renderer, 255, 255, 0, 255);
 
-		if (physics::BoxOverlap(b.box, b2.box, b.transform, b2.transform))
+		if (physics::computeBoxContacts(b.box, b2.box, b.transform, b2.transform, contacts))
 		{
 			b.linearVelocity = Vec2::Zero;
 			SDL_SetRenderDrawColor(sdl_renderer, 255, 0, 0, 255);
 		}
 		else
 			SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 255, 255);
-		quickdraw::DrawRigidbody(b);
-		quickdraw::DrawRigidbody(b2);
 
-		b.Update(deltaTime);
+		quickdraw::drawRigidbody(b);
+		quickdraw::drawRigidbody(b2);
+
+		Contact shortest;
+		shortest.depth = FLT_MAX;
+		for (Contact& c : contacts)
+		{
+			if (c.depth < shortest.depth)
+				shortest = c;
+		}
+		quickdraw::drawContact(shortest);
+
+
+		//b.Update(deltaTime);
 		engineRenderer.engineUI();
 
 		ImGui::Begin("hello", nullptr);

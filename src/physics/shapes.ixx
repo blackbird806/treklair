@@ -1,5 +1,6 @@
 ﻿module;
 #include <algorithm>
+#include <vector>
 #include <print>
 #include <SDL3/SDL_render.h>
 export module treklair:shapes;
@@ -68,7 +69,7 @@ namespace physics {
 		return true;
 	};
 
-	export bool CircleOverlap(const Circle& a, const Circle& b, const Transform& aT, const Transform& bT)
+	export bool circleOverlap(const Circle& a, const Circle& b, const Transform& aT, const Transform& bT)
 	{
 		float sqrDist = (bT.position - aT.position).sqrLength();
 		float radiusSum = a.radius + b.radius;
@@ -85,7 +86,7 @@ namespace physics {
 		return (closestPoint - pT).sqrLength() <= b.radius * b.radius;
 	};
 
-	export bool BoxCircleOverlap(const Box& a, const Circle& b, const Transform& aT, const Transform& bT)
+	export bool boxCircleOverlap(const Box& a, const Circle& b, const Transform& aT, const Transform& bT)
 	{
 		Matrix3 aMat = Matrix3::transRota(aT);
 		Matrix3 aMatInverse = Matrix3::inverse(aMat);
@@ -94,7 +95,7 @@ namespace physics {
 		return AABBCircleOverlap(a.ToAABB(Vec2()), b, bPosInv);
 	};
 
-	bool ProjectOnAxis(Vec2 axis, Vec2 corners[4], float halfSize)
+	bool projectOnAxis(Vec2 axis, Vec2 corners[4], float halfSize)
 	{
 		float bProjs[4];
 		float bMinProj = FLT_MAX;
@@ -111,25 +112,49 @@ namespace physics {
 		return  !(bMinProj < -halfSize && bMaxProj < -halfSize || bMinProj > halfSize && bMaxProj > halfSize);
 	}
 
-	bool ProjectOnAxis(Vec2 axis, Vec2 corners[4], float halfSize, float& depth, int& cornerContactIndex)
+	int projectOnAxis(Vec2 axis, Vec2 corners[4], float halfSize, float& depth, int* cornerContactIndex, float epsilon)
 	{
 		float bProjs[4];
 		float bMinProj = FLT_MAX;
 		float bMaxProj = -FLT_MAX;
-		int minProjIndex;
-		int maxProjIndex;
+		int minProjIndex[2];
+		int maxProjIndex[2];
+		int minContactCount = 1;
+		int maxContactCount = 1;
+
 		for (int i = 0; i < 4; i++)
 		{
+			bool exAequo = false;
 			bProjs[i] = axis.dot(corners[i]);
-			if (bProjs[i] < bMinProj)
+			//Check ex-aequos
+			if (std::abs(bProjs[i] - bMinProj) <= epsilon)
 			{
-				bMinProj = bProjs[i];
-				minProjIndex = i;
+				minProjIndex[1] = i;
+				int minContactCount = 2;
+				exAequo = true;
 			}
-			if (bProjs[i] > bMaxProj)
+			if (std::abs(bProjs[i] - bMaxProj) <= epsilon)
 			{
-				bMaxProj = bProjs[i];
-				maxProjIndex = i;
+				maxProjIndex[1] = i;
+				int maxContactCount = 2;
+				exAequo = true;
+			}
+
+			//if not ex aequo check pur superior / inferior
+			if (!exAequo)
+			{
+				if (bProjs[i] < bMinProj)
+				{
+					bMinProj = bProjs[i];
+					minProjIndex[0] = i;
+					minContactCount = 1;
+				}
+				if (bProjs[i] > bMaxProj)
+				{
+					bMaxProj = bProjs[i];
+					maxProjIndex[0] = i;
+					maxContactCount = 1;
+				}
 			}
 		}
 
@@ -138,38 +163,40 @@ namespace physics {
 
 		if (bMinProj > -halfSize && bMinProj < halfSize)
 		{
-			cornerContactIndex = minProjIndex;
-			depth = std::abs(halfSize - bMinProj);
-			return true;
+			std::memcpy(cornerContactIndex, minProjIndex, 2);
+			depth = halfSize - bMinProj;
+			return minContactCount;
 		}
 		if (bMaxProj > -halfSize && bMaxProj < halfSize)
 		{
-			cornerContactIndex = maxProjIndex;
-			depth = std::abs(bMaxProj + halfSize); //- - halfsize
-			return true;
+			std::memcpy(cornerContactIndex, maxProjIndex, 2);
+			depth = bMaxProj + halfSize; //- - halfsize
+			return maxContactCount;
+
 		}
+		//case of completely inside
 		if (bMinProj < -halfSize && bMaxProj > halfSize)
 		{
-			float minProjDif = -bMinProj - halfSize;
-			float maxProjDif = bMaxProj - halfSize;
-			if (minProjDif < maxProjDif)
+			float minProjDif = bMinProj - halfSize;
+			float maxProjDif = bMaxProj + halfSize; // jsuis un génie ???
+			if (minProjDif > maxProjDif)
 			{
 				//min proj shortest
-				cornerContactIndex = minProjIndex;
+				std::memcpy(cornerContactIndex, minProjIndex, 2);
 				depth = minProjDif;
-				return true;
+				return minContactCount;
 			}
 			else
 			{
-				cornerContactIndex = maxProjIndex;
+				std::memcpy(cornerContactIndex, maxProjIndex, 2);
 				depth = maxProjDif;
-				return true;
+				return maxContactCount;
 			}
 		}
-		return false;
+		return 0;
 	}
 
-	bool BoxSAT(const Box& a, const Box& b, const Transform& aT, const Transform& bT)
+	bool boxSAT(const Box& a, const Box& b, const Transform& aT, const Transform& bT)
 	{
 		//first box SAT
 		Vec2 axes[2];
@@ -193,7 +220,7 @@ namespace physics {
 		//Project corners on axes
 		for (int i = 0; i < 2; i++)
 		{
-			if (!ProjectOnAxis(axes[i], bCorners, a.halfSize[i]))
+			if (!projectOnAxis(axes[i], bCorners, a.halfSize[i]))
 			{
 				return false;
 			}
@@ -203,7 +230,7 @@ namespace physics {
 	}
 
 
-	bool BoxSAT(const Box& a, const Box& b, const Transform& aT, const Transform& bT, Contact& contact)
+	bool boxSAT(const Box& a, const Box& b, const Transform& aT, const Transform& bT, std::vector<Contact>& contacts)
 	{
 		//first box SAT
 		Vec2 axes[2];
@@ -226,56 +253,49 @@ namespace physics {
 		bCorners[1] += bRa;
 
 		//Project corners on axes
-		float depth[2];
+		float depth;
 		int cornerContactIndex[2];
-		contact.depth = FLT_MAX;
 		for (int i = 0; i < 2; i++)
 		{
-			if (!ProjectOnAxis(axes[i], bCorners, a.halfSize[i], depth[i], cornerContactIndex[i]))
-			{
-				contact = Contact();
+			int contactCount = projectOnAxis(axes[i], bCorners, a.halfSize[i], depth, cornerContactIndex, 0.01f);
+			if (contactCount == 0)
 				return false;
-			}
 
-			if (depth[i] < contact.depth)
+			for (int j = 0; j < contactCount; j++)
 			{
-				contact.point = translate * (bCorners[cornerContactIndex[i]]);
-				contact.depth = depth[i];
+				Contact contact = Contact();
+				contact.point = translate * bCorners[cornerContactIndex[j]];
+				contact.depth = depth;
 				contact.direction = axes[i];
+				contacts.push_back(contact);
 			}
 		}
 
 		return true;
 	}
 
-	export bool BoxOverlap(const Box& a, const Box& b, const Transform& aT, const Transform& bT)
+	export bool boxOverlap(const Box& a, const Box& b, const Transform& aT, const Transform& bT)
 	{
 		//Bounding sphere distance check for quick check opti
 		if ((a.halfSize.sqrLength() + b.halfSize.sqrLength()) * 2 < (bT.position - aT.position).sqrLength())
 			return false;
 
 		int contactCount = 0;
-		if (BoxSAT(a, b, aT, bT))
+		if (boxSAT(a, b, aT, bT))
 			contactCount++;
-		if (BoxSAT(b, a, bT, aT))
+		if (boxSAT(b, a, bT, aT))
 			contactCount++;
 
 		return contactCount > 1;
 	}
 
-	export int BoxOverlap(const Box& a, const Box& b, const Transform& aT, const Transform& bT, Contact* contacts)
+	export bool computeBoxContacts(const Box& a, const Box& b, const Transform& aT, const Transform& bT, std::vector<Contact>& contacts)
 	{
 		//Bounding sphere distance check for quick check opti
 		if ((a.halfSize.sqrLength() + b.halfSize.sqrLength()) * 2 < (bT.position - aT.position).sqrLength())
 			return false;
 
-		int contactCount = 0;
-		if (BoxSAT(a, b, aT, bT, contacts[contactCount]))
-			contactCount++;
-		if (BoxSAT(b, a, bT, aT, contacts[contactCount]))
-			contactCount++;
-
-		return contactCount;
+		return boxSAT(a, b, aT, bT, contacts) && boxSAT(b, a, bT, aT, contacts);
 	}
 
 	export float AABBRayOverlap(const AABB& a, Vec2 begin, Vec2 end)

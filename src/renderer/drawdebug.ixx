@@ -10,7 +10,8 @@ import :rigidbody;
 import :shapes;
 
 namespace quickdraw {
-	export void DrawAABB(const AABB& aabb)
+	export void drawAABB
+	(const AABB& aabb)
 	{
 		Vec2 size = Size(aabb);
 		SDL_FRect rect = SDL_FRect(aabb.min.x, aabb.min.y, size.x, size.y);
@@ -18,7 +19,7 @@ namespace quickdraw {
 		SDL_RenderRect(sdl_renderer, &rect);
 	};
 
-	void DrawBoxRigidbody(const Rigidbody& rb)
+	void drawBoxRigidbody(const Rigidbody& rb)
 	{
 		SDL_FPoint points[5];
 		Matrix3 transRota = Matrix3::transRota(rb.transform);
@@ -31,7 +32,7 @@ namespace quickdraw {
 		SDL_RenderLines(sdl_renderer, points, 5);
 	};
 
-	export void DrawCircle(float radius, const Vec2& pos, int pointNumber = 16)
+	export void drawCircle(float radius, const Vec2& pos, int pointNumber = 16)
 	{
 		assert(pointNumber < 64);
 		SDL_FPoint points[65];
@@ -52,20 +53,20 @@ namespace quickdraw {
 		SDL_RenderLines(sdl_renderer, points, pointNumber + 1);
 	};
 
-	export void DrawRigidbody(const Rigidbody& rb)
+	export void drawRigidbody(const Rigidbody& rb)
 	{
 		switch (rb.shapeType)
 		{
 		case CircleShape:
-			DrawCircle(rb.circle.radius, rb.transform.position);
+			drawCircle(rb.circle.radius, rb.transform.position);
 			break;
 		case BoxShape:
-			DrawBoxRigidbody(rb);
+			drawBoxRigidbody(rb);
 			break;
 		}
 	};
 
-	export void DrawContact(const Contact& contact)
+	export void drawContact(const Contact& contact)
 	{
 		SDL_RenderLine(sdl_renderer, contact.point.x, contact.point.y, contact.point.x + (contact.direction.x * contact.depth), contact.point.y + (contact.direction.y * contact.depth));
 	}
