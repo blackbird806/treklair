@@ -2,14 +2,46 @@
 #include <SDL3/SDL.h>
 #include <cassert>
 #include <numbers>
+#include <vector>
 export module treklair:quickRenderer;
 
 import :globals;
 import :matrix3;
 import :rigidbody;
 import :shapes;
+import :vec2;
 
 namespace quickdraw {
+	struct LineTime
+	{
+		Vec2 start;
+		Vec2 end;
+		float time;
+		float currentTime = 0;
+	};
+
+	static std::vector<LineTime> lineTimes;
+
+	export void updateDebugDraw(float deltaTime)
+	{
+		std::vector<int> toErase;
+		for (int i = 0; i < lineTimes.size(); i++)
+		{
+			lineTimes[i].currentTime += deltaTime;
+			SDL_RenderLine(sdl_renderer, lineTimes[i].start.x, lineTimes[i].start.y, lineTimes[i].end.x, lineTimes[i].end.y);
+
+			if (lineTimes[i].currentTime > lineTimes[i].time)
+			{
+				toErase.push_back(i);
+			}
+		}
+		for (int i : toErase)
+		{
+			lineTimes.erase(lineTimes.begin() + i);
+		}
+
+	}
+
 	export void drawAABB
 	(const AABB& aabb)
 	{
@@ -69,5 +101,15 @@ namespace quickdraw {
 	export void drawContact(const Contact& contact)
 	{
 		SDL_RenderLine(sdl_renderer, contact.point.x, contact.point.y, contact.point.x + (contact.direction.x * contact.depth), contact.point.y + (contact.direction.y * contact.depth));
+	}
+
+	export void drawLineTime(const Vec2& start, const Vec2& end, float time)
+	{
+		lineTimes.push_back(LineTime(start, end, time));
+	}
+
+	export void drawLine(const Vec2& start, const Vec2& end)
+	{
+		SDL_RenderLine(sdl_renderer, start.x,start.y, end.x, end.y);
 	}
 }

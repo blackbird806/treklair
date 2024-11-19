@@ -11,3 +11,4 @@ export import :matrix3;
 export import :transform;
 export import :shapes;
 export import :rigidbody;
+export import :simulation;

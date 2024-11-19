@@ -18,14 +18,28 @@ int main(int argc, char** argv)
 	Uint64 timeLast = 0;
 	float deltaTime = 0;
 
+	Simulation simulation;
+
 	AABB aabb = AABB({ 100,100 }, { 150,150 });
 	AABB aabb2 = AABB({ 100,100 }, { 130,150 });
 	Rigidbody c = Rigidbody(Circle(50));
 	Rigidbody c2 = Rigidbody(Circle(50));
 	Rigidbody b = Rigidbody(Box({50, 50}));
 	Rigidbody b2 = Rigidbody(Box({ 75,75 }));
+	Rigidbody base = Rigidbody(Box({ 1000,50 }));
+	base.transform.position = { 0,500 };
+	base.kinematic = true;
+	base.transform.rotation = 0;
 	c2.transform.position = Vec2(200, 200);
-	b.transform.position = Vec2(300, 300);
+	b.transform.position = Vec2(300, 100);
+	b.angularVelocity = 0;
+	b.linearVelocity = Vec2(00, 0);
+	simulation.createRigidbody(base);
+	//simulation.createRigidbody(c);
+	//simulation.createRigidbody(c2);
+	Rigidbody* mouseBody = simulation.createRigidbody(b);
+	//simulation.createRigidbody(b2);
+	
 
 	std::print("hello {}", "world");
 
@@ -51,6 +65,7 @@ int main(int argc, char** argv)
 	std::unordered_map<SDL_Keycode, bool> input_map;
 	
 	Vec2 mousePos;
+	bool mousePressed;
 
 	GameRenderer gameRenderer;
 	World world(1, 1);
@@ -82,10 +97,32 @@ int main(int argc, char** argv)
 			{
 				input_map[event.key.key] = false;
 			}
+			else if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
+			{
+				input_map[event.button.button] = true;
+			}
+			else if (event.type == SDL_EVENT_MOUSE_BUTTON_UP)
+			{
+				input_map[event.button.button] = false;
+			}
 		}
 		SDL_GetMouseState(&mousePos.x, &mousePos.y);
 		mousePos -= Vec2(100, 0);
 		engineRenderer.startFrame();
+
+		if (input_map[SDL_BUTTON_LEFT])
+		{
+			if (!mousePressed)
+			{
+				b.transform.position = mousePos;
+				simulation.createRigidbody(b);
+				mousePressed = true;
+			}
+		}
+		else
+		{
+			mousePressed = false;
+		}
 
 		SDL_SetRenderLogicalPresentation(sdl_renderer, gameSizeX, gameSizeY, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 		SDL_SetRenderTarget(sdl_renderer, renderTarget);
@@ -108,36 +145,11 @@ int main(int argc, char** argv)
 			SDL_RenderTexture(sdl_renderer, renderTarget, nullptr, nullptr);
 		}
 
-		std::vector<Contact> contacts;
-		b2.transform.position = mousePos;
-		b.transform.rotation = 1.2;
-		b2.transform.rotation = 0;
-
-		b.linearVelocity.y += gravity * deltaTime;
-		SDL_SetRenderDrawColor(sdl_renderer, 255, 255, 0, 255);
-
-		if (physics::computeBoxContacts(b.box, b2.box, b.transform, b2.transform, contacts))
-		{
-			b.linearVelocity = Vec2::Zero;
-			SDL_SetRenderDrawColor(sdl_renderer, 255, 0, 0, 255);
-		}
-		else
-			SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 255, 255);
-
-		quickdraw::drawRigidbody(b);
-		quickdraw::drawRigidbody(b2);
-
-		Contact shortest;
-		shortest.depth = FLT_MAX;
-		for (Contact& c : contacts)
-		{
-			if (c.depth < shortest.depth)
-				shortest = c;
-		}
-		quickdraw::drawContact(shortest);
-
-
-		//b.Update(deltaTime);
+		SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 255, 255);
+		quickdraw::updateDebugDraw(deltaTime);
+		simulation.debugDrawRigidbodies();
+		SDL_SetRenderDrawColor(sdl_renderer, 255, 0, 0, 255);
+		simulation.update(deltaTime);
 		engineRenderer.engineUI();
 
 		ImGui::Begin("hello", nullptr);
