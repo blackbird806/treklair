@@ -58,6 +58,7 @@ export struct Box
 	}
 };
 
+#pragma region Overlap
 export bool AABBOverlap(const AABB& a, const AABB& b)
 {
 	//If seperation along an axis detected return false
@@ -74,6 +75,7 @@ export bool circleOverlap(const Circle& a, const Circle& b, const Transform& aT,
 	float radiusSum = a.radius + b.radius;
 	return (sqrDist <= radiusSum * radiusSum);
 };
+
 
 export bool AABBCircleOverlap(const AABB& a, const Circle& b, const Vec2& pT)
 {
@@ -94,7 +96,7 @@ export bool boxCircleOverlap(const Box& a, const Circle& b, const Transform& aT,
 	return AABBCircleOverlap(a.ToAABB(Vec2()), b, bPosInv);
 };
 
-bool projectOnAxis(Vec2 axis, Vec2 corners[4], float halfSize)
+bool projectCornerOnAxis(Vec2 axis, Vec2 corners[4], float halfSize)
 {
 	float bProjs[4];
 	float bMinProj = FLT_MAX;
@@ -111,7 +113,73 @@ bool projectOnAxis(Vec2 axis, Vec2 corners[4], float halfSize)
 	return  !(bMinProj < -halfSize && bMaxProj < -halfSize || bMinProj > halfSize && bMaxProj > halfSize);
 };
 
-int projectOnAxis(Vec2 axis, Vec2 corners[4], float halfSize, float& depth, int* cornerContactIndex, float epsilon)
+bool boxSAT(const Box& a, const Box& b, const Transform& aT, const Transform& bT)
+{
+	//first box SAT
+	Vec2 axes[2];
+	axes[0] = aT.rotate(Vec2::Right);
+	axes[1] = aT.rotate(Vec2::Up);
+
+	//Calculate b corners position relative to a
+	Vec2 bRa = bT.position - aT.position;
+	Vec2 bCorners[4];
+	bCorners[0] = bT.rotate(b.halfSize); //RU
+
+	bCorners[1] = b.halfSize; //RD
+	bCorners[1].y = -b.halfSize.y;
+	bCorners[1] = bT.rotate(bCorners[1]);
+
+	bCorners[2] = -bCorners[1] + bRa; //LU
+	bCorners[3] = -bCorners[0] + bRa; //LD
+	bCorners[0] += bRa;
+	bCorners[1] += bRa;
+
+	//Project corners on axes
+	for (int i = 0; i < 2; i++)
+	{
+		if (!projectCornerOnAxis(axes[i], bCorners, a.halfSize[i]))
+		{
+			return false;
+		}
+	}
+
+	return true;
+};
+
+export bool boxOverlap(const Box& a, const Box& b, const Transform& aT, const Transform& bT)
+{
+	//Bounding sphere distance check for quick check opti
+	if ((a.halfSize.sqrLength() + b.halfSize.sqrLength()) * 2 < (bT.position - aT.position).sqrLength())
+		return false;
+
+	int contactCount = 0;
+	if (boxSAT(a, b, aT, bT))
+		contactCount++;
+	if (boxSAT(b, a, bT, aT))
+		contactCount++;
+
+	return contactCount > 1;
+};
+
+export float AABBRayOverlap(const AABB& a, Vec2 begin, Vec2 end)
+{
+	return false;
+};
+
+export bool AABBBoxOverlap(const AABB& a, const Box& b, const Transform& aT, const Transform& bT)
+{
+	return false;
+};
+
+
+#pragma endregion
+
+#pragma region Contacts
+//Contacts computing
+
+//Box box contacts
+
+int projectCornerOnAxis(Vec2 axis, Vec2 corners[4], float halfSize, float& depth, int* cornerContactIndex, float epsilon)
 {
 	float bProjs[4];
 	float bMinProj = FLT_MAX;
@@ -196,38 +264,6 @@ int projectOnAxis(Vec2 axis, Vec2 corners[4], float halfSize, float& depth, int*
 	return 0;
 };
 
-bool boxSAT(const Box& a, const Box& b, const Transform& aT, const Transform& bT)
-{
-	//first box SAT
-	Vec2 axes[2];
-	axes[0] = aT.rotate(Vec2::Right);
-	axes[1] = aT.rotate(Vec2::Up);
-
-	//Calculate b corners position relative to a
-	Vec2 bRa = bT.position - aT.position;
-	Vec2 bCorners[4];
-	bCorners[0] = bT.rotate(b.halfSize); //RU
-
-	bCorners[1] = b.halfSize; //RD
-	bCorners[1].y = -b.halfSize.y;
-	bCorners[1] = bT.rotate(bCorners[1]);
-
-	bCorners[2] = -bCorners[1] + bRa; //LU
-	bCorners[3] = -bCorners[0] + bRa; //LD
-	bCorners[0] += bRa;
-	bCorners[1] += bRa;
-
-	//Project corners on axes
-	for (int i = 0; i < 2; i++)
-	{
-		if (!projectOnAxis(axes[i], bCorners, a.halfSize[i]))
-		{
-			return false;
-		}
-	}
-
-	return true;
-};
 
 
 bool boxSAT(const Box& a, const Box& b, const Transform& aT, const Transform& bT, std::vector<Contact>& contacts)
@@ -257,7 +293,7 @@ bool boxSAT(const Box& a, const Box& b, const Transform& aT, const Transform& bT
 	int cornerContactIndex[2];
 	for (int i = 0; i < 2; i++)
 	{
-		int contactCount = projectOnAxis(axes[i], bCorners, a.halfSize[i], depth, cornerContactIndex, 0.01f);
+		int contactCount = projectCornerOnAxis(axes[i], bCorners, a.halfSize[i], depth, cornerContactIndex, 0.01f);
 		if (contactCount == 0)
 			return false;
 
@@ -274,21 +310,6 @@ bool boxSAT(const Box& a, const Box& b, const Transform& aT, const Transform& bT
 	return true;
 };
 
-export bool boxOverlap(const Box& a, const Box& b, const Transform& aT, const Transform& bT)
-{
-	//Bounding sphere distance check for quick check opti
-	if ((a.halfSize.sqrLength() + b.halfSize.sqrLength()) * 2 < (bT.position - aT.position).sqrLength())
-		return false;
-
-	int contactCount = 0;
-	if (boxSAT(a, b, aT, bT))
-		contactCount++;
-	if (boxSAT(b, a, bT, aT))
-		contactCount++;
-
-	return contactCount > 1;
-};
-
 export bool computeBoxContacts(const Box& a, const Box& b, const Transform& aT, const Transform& bT, std::vector<Contact>& contacts)
 {
 	//Bounding sphere distance check for quick check opti
@@ -298,12 +319,55 @@ export bool computeBoxContacts(const Box& a, const Box& b, const Transform& aT, 
 	return boxSAT(a, b, aT, bT, contacts) && boxSAT(b, a, bT, aT, contacts);
 };
 
-export float AABBRayOverlap(const AABB& a, Vec2 begin, Vec2 end)
+//Circle contacts
+export bool computeCircleContacts(const Circle& a, const Circle& b, const Transform& aT, const Transform& bT, std::vector<Contact>& contacts)
 {
-	return false;
+	Vec2 diff = (bT.position - aT.position);
+	float dist = diff.length();
+	float radiusSum = a.radius + b.radius;
+	Contact contact;
+	contact.direction = diff.getNormalized();
+	contact.point = aT.position + contact.direction * a.radius;
+	contact.depth = radiusSum - dist;
+	contacts.push_back(contact);
+	return (dist <= radiusSum);
+}
+
+//Box Circle contacts
+export bool computeAABBCircleContacts(const AABB& a, const Circle& b, const Vec2& pT, std::vector<Contact>& contacts)
+{
+	Vec2 centerAABB = Center(a);
+	Vec2 distance = pT - centerAABB;
+	Vec2 boundsAABB = a.max - centerAABB;
+	Vec2 clampDist = Vec2::clamp(distance, -boundsAABB, boundsAABB);
+	Vec2 closestPoint = centerAABB + clampDist;
+	Vec2 diff = (closestPoint - pT);
+	float closestDist = diff.length();
+
+	Contact contact;
+	contact.point = closestPoint;
+	contact.depth = closestDist - b.radius;
+	contact.direction = diff / closestDist;
+
+	contacts.push_back(contact);
+
+	return contact.depth <= 0;
 };
 
-export bool AABBBoxOverlap(const AABB& a, const Box& b, const Transform& aT, const Transform& bT)
+export bool computeBoxCircleContacts(const Box& a, const Circle& b, const Transform& aT, const Transform& bT, std::vector<Contact>& contacts)
 {
-	return false;
+	Matrix3 aMatTrans = Matrix3::translation(aT.position);
+	Matrix3 aMatRota = Matrix3::rotation(aT.rotation);
+	Matrix3 aMat = aMatTrans * aMatRota;
+	Matrix3 aMatInverse = Matrix3::inverse(aMat);
+	Vec2 bPosInv = aMatInverse * (bT.position);
+	bool collide = computeAABBCircleContacts(a.ToAABB(Vec2()), b, bPosInv, contacts);
+	Contact& c = contacts.back();
+	c.point = aMat * c.point;
+	c.direction = aMatRota * c.direction;
+
+	return collide;
 };
+
+
+#pragma endregion

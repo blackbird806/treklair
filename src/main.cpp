@@ -9,38 +9,48 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
 #include <string>
+#include <vector>
 
 import treklair;
+
+std::unordered_map<SDL_Keycode, bool> input_map;
+std::unordered_map<SDL_Keycode, bool> input_map_pressed;
+std::unordered_map<SDL_Keycode, bool> input_map_released;
+
+static void setInput(SDL_Keycode key, bool value)
+{
+	if (value)
+	{
+		if (input_map[key] == false)
+			input_map_pressed[key] = true;
+		input_map[key] = true;
+	}
+	else
+	{
+		if (input_map[key] == true)
+			input_map_released[key] = true;
+		input_map[key] = false;
+	}
+};
 
 int main(int argc, char** argv)
 {
 	Uint64 timeNow = SDL_GetPerformanceCounter();
 	Uint64 timeLast = 0;
 	float deltaTime = 0;
+	float timeDilation = 1.0f;
 
 	Simulation simulation;
 
-	AABB aabb = AABB({ 100,100 }, { 150,150 });
-	AABB aabb2 = AABB({ 100,100 }, { 130,150 });
-	Rigidbody c = Rigidbody(Circle(50));
-	Rigidbody c2 = Rigidbody(Circle(50));
-	Rigidbody b = Rigidbody(Box({50, 50}));
-	Rigidbody b2 = Rigidbody(Box({ 75,75 }));
 	Rigidbody base = Rigidbody(Box({ 1000,50 }));
+	Rigidbody box = Rigidbody(Box({ 50, 50 }));
+	Rigidbody circle = Rigidbody(Circle({ 50 }));
 	base.transform.position = { 0,500 };
 	base.kinematic = true;
 	base.transform.rotation = 0;
-	c2.transform.position = Vec2(200, 200);
-	b.transform.position = Vec2(300, 100);
-	b.angularVelocity = 0;
-	b.linearVelocity = Vec2(00, 0);
 	simulation.createRigidbody(base);
-	//simulation.createRigidbody(c);
-	//simulation.createRigidbody(c2);
-	Rigidbody* mouseBody = simulation.createRigidbody(b);
-	//simulation.createRigidbody(b2);
+	std::vector<Rigidbody*> createdBodies;
 	
-
 	std::print("hello {}", "world");
 
 	if (!SDL_Init(SDL_INIT_VIDEO))
@@ -62,10 +72,10 @@ int main(int argc, char** argv)
 	EngineRenderer engineRenderer;
 	engineRenderer.initImgui();
 	bool done = false;
-	std::unordered_map<SDL_Keycode, bool> input_map;
+
 	
 	Vec2 mousePos;
-	bool mousePressed;
+	bool keyPressed;
 
 	GameRenderer gameRenderer;
 	World world(1, 1);
@@ -77,6 +87,8 @@ int main(int argc, char** argv)
 
 		SDL_SetWindowTitle(sdl_window, ("treklair dt : " + std::to_string(deltaTime)).c_str());
 
+		input_map_pressed.clear();
+		input_map_released.clear();
 		SDL_Event event;
 
 		while (SDL_PollEvent(&event))
@@ -91,38 +103,48 @@ int main(int argc, char** argv)
 
 			else if (event.type == SDL_EVENT_KEY_DOWN)
 			{
-				input_map[event.key.key] = true;
+				setInput(event.key.key, true);
 			}
 			else if (event.type == SDL_EVENT_KEY_UP)
 			{
-				input_map[event.key.key] = false;
+				setInput(event.key.key, false);
 			}
 			else if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
 			{
-				input_map[event.button.button] = true;
+				setInput(event.key.key, true);
 			}
 			else if (event.type == SDL_EVENT_MOUSE_BUTTON_UP)
 			{
-				input_map[event.button.button] = false;
+				setInput(event.key.key, false);
 			}
 		}
+
 		SDL_GetMouseState(&mousePos.x, &mousePos.y);
 		mousePos -= Vec2(100, 0);
 		engineRenderer.startFrame();
 
-		if (input_map[SDL_BUTTON_LEFT])
+		if (input_map_pressed[SDLK_C] || input_map_pressed[SDLK_B])
 		{
-			if (!mousePressed)
-			{
-				b.transform.position = mousePos;
-				simulation.createRigidbody(b);
-				mousePressed = true;
-			}
+			Rigidbody rb = input_map_pressed[SDLK_C] ? circle : box;
+			rb.transform.position = mousePos;
+			createdBodies.push_back(simulation.createRigidbody(rb));
 		}
-		else
+
+		if (input_map_pressed[SDLK_F1])
+			simulation.simulate = !simulation.simulate;
+
+		if (input_map_pressed[SDLK_F2])
+			timeDilation = timeDilation == 0 ? 1 : 0;
+
+		//clear created objects
+		if (input_map_pressed[SDLK_F3])
 		{
-			mousePressed = false;
+			simulation.removeRigidbodies(createdBodies);
+			createdBodies.clear();
 		}
+
+		if (input_map_pressed[SDLK_F9])
+			simulation.computeSimulation(1.0f / 10.0f);
 
 		SDL_SetRenderLogicalPresentation(sdl_renderer, gameSizeX, gameSizeY, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 		SDL_SetRenderTarget(sdl_renderer, renderTarget);
@@ -145,11 +167,13 @@ int main(int argc, char** argv)
 			SDL_RenderTexture(sdl_renderer, renderTarget, nullptr, nullptr);
 		}
 
+
 		SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 255, 255);
 		quickdraw::updateDebugDraw(deltaTime);
 		simulation.debugDrawRigidbodies();
 		SDL_SetRenderDrawColor(sdl_renderer, 255, 0, 0, 255);
-		simulation.update(deltaTime);
+		simulation.update(deltaTime * timeDilation);
+
 		engineRenderer.engineUI();
 
 		ImGui::Begin("hello", nullptr);

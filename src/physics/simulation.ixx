@@ -1,3 +1,4 @@
+module;
 #include <SDL3/SDL_render.h>
 export module treklair:simulation;
 
@@ -5,12 +6,16 @@ import <vector>;
 import <algorithm>;
 import <print>;
 import <string>;
+import <cstdint>;
+import <unordered_map>;
 
 
 import :shapes;
 import :rigidbody;
 import :quickRenderer;
 import :globals;
+
+static const float epsilon = 0.0001;
 
 export struct CollisionPair
 {
@@ -23,29 +28,33 @@ export struct CollisionPair
 export class Simulation
 {
 private:
-	std::vector<Rigidbody> bodies; //use vector for faster sorting
+	float fixedDeltaTime = 1.0 / 30.0; // 30 tick par sec
+	float timeSinceLastUpdate = 0;
+	unsigned int idCount = 0;
+	std::unordered_map<int, Rigidbody> bodies; //bodies stored in this
+	std::vector<Rigidbody*> sorted_bodies; //used for sweep and prune sorting
 
 	std::vector<CollisionPair> circleCirclePairs;
-	std::vector<CollisionPair> circleBoxPairs;
+	std::vector<CollisionPair> boxCirclePairs;
 	std::vector<CollisionPair> boxBoxPairs;
 
 	std::vector<CollisionPair> overlapingPairs;
 
-	void addPair(Rigidbody& body1, Rigidbody& body2)
+	void addPair(Rigidbody* body1, Rigidbody* body2)
 	{
-		if (body1.shapeType == CircleShape)
+		if (body1->shapeType == CircleShape)
 		{
-			if (body2.shapeType == CircleShape)
-				circleCirclePairs.push_back(CollisionPair(&body1, &body2));
+			if (body2->shapeType == CircleShape)
+				circleCirclePairs.push_back(CollisionPair(body1, body2));
 			else
-				circleBoxPairs.push_back(CollisionPair(&body1, &body2));
+				boxCirclePairs.push_back(CollisionPair(body2, body1));
 		}
 		else
 		{
-			if (body2.shapeType == CircleShape)
-				circleBoxPairs.push_back(CollisionPair(&body2, &body1));
+			if (body2->shapeType == CircleShape)
+				boxCirclePairs.push_back(CollisionPair(body1, body2));
 			else
-				boxBoxPairs.push_back(CollisionPair(&body1, &body2));
+				boxBoxPairs.push_back(CollisionPair(body1, body2));
 		}
 	};
 
@@ -54,24 +63,38 @@ private:
 	/// </summary>
 	void sweepAndPrune()
 	{
-		for (int i = 0; i < bodies.size(); i++)
+		sorted_bodies.clear();
+		for (auto& body : bodies)
+			sorted_bodies.push_back(&body.second);
+
+
+		for (int i = 0; i < sorted_bodies.size(); i++)
 		{
-			for (int j = i + 1; j < bodies.size(); j++)
+			for (int j = i + 1; j < sorted_bodies.size(); j++)
 			{
-				addPair(bodies[i], bodies[j]);
+				addPair(sorted_bodies[i], sorted_bodies[j]);
 			}
 		}
-	}
+	};
 
+	#pragma region Collision Phase
 	void circleCircleCollisions()
 	{
-
-	}
+		for (CollisionPair pair : circleCirclePairs)
+		{
+			if (computeCircleContacts(pair.first->circle, pair.second->circle, pair.first->transform, pair.second->transform, pair.contacts))
+				overlapingPairs.push_back(pair);
+		}
+	};
 
 	void circleBoxCollisions()
 	{
-
-	}
+		for (CollisionPair pair : boxCirclePairs)
+		{
+			if (computeBoxCircleContacts(pair.first->box, pair.second->circle, pair.first->transform, pair.second->transform, pair.contacts))
+				overlapingPairs.push_back(pair);
+		}
+	};
 
 	void boxBoxCollisions()
 	{
@@ -80,14 +103,14 @@ private:
 			if (computeBoxContacts(pair.first->box, pair.second->box, pair.first->transform, pair.second->transform, pair.contacts))
 				overlapingPairs.push_back(pair);
 		}
-	}
+	};
 
 	void computeCollisions()
 	{
 		circleCircleCollisions();
 		circleBoxCollisions();
 		boxBoxCollisions();
-	}
+	};
 
 	void computeCollisionResponse()
 	{
@@ -110,7 +133,7 @@ private:
 			//Collision velocity
 			Vec2 normal = shortest.direction;
 			Vec2 pairVelocity = pair.first->linearVelocity - pair.second->linearVelocity;
-			float impulse = - 0.5 * pairVelocity.dot(normal) * (pair.first->mass + pair.second->mass);
+			float impulse = -0.5 * pairVelocity.dot(normal) * (pair.first->mass + pair.second->mass);
 			Vec2 vectorImpulse = normal * impulse;
 
 			pair.first->addImpulse(vectorImpulse);
@@ -136,26 +159,40 @@ private:
 				massRatio1 = pair.first->mass / (pair.first->mass + pair.second->mass);
 				massRatio2 = pair.second->mass / (pair.first->mass + pair.second->mass);
 			}
-			pair.first->transform.position -= shortest.direction * shortest.depth * massRatio1;
-			pair.second->transform.position += shortest.direction * shortest.depth * massRatio2;
+			if (simulate)
+			{
+				shortest.depth += epsilon;
+				pair.first->transform.position -= shortest.direction * shortest.depth * massRatio1;
+				pair.second->transform.position += shortest.direction * shortest.depth * massRatio2;
+			}
+
 			SDL_SetRenderDrawColor(sdl_renderer, 255, 0, 0, 255);
 			quickdraw::drawLine(shortest.point, shortest.point + shortest.direction * shortest.depth);
 			//quickdraw::drawLineTime(shortest.point, shortest.point + shortest.direction * shortest.depth * 10, 1);
-			std::print("\nCollision occured : {0}" , shortest.depth);
+			std::print("\nCollision occured : {0}", shortest.depth);
 		}
-	}
+	};
+#pragma endregion
+
+
+	
 
 public:
-	void update(float deltaTime)
+	bool simulate = true;
+
+	void computeSimulation(float deltaTime)
 	{
 		//Update bodies
-		for (Rigidbody& body : bodies)
+		if (simulate)
 		{
-			body.update(deltaTime);
+			for (auto& body : bodies)
+			{
+				body.second.update(deltaTime);
+			}
 		}
 
 		circleCirclePairs.clear();
-		circleBoxPairs.clear();
+		boxCirclePairs.clear();
 		boxBoxPairs.clear();
 		overlapingPairs.clear();
 
@@ -167,6 +204,24 @@ public:
 
 		//Collision response
 		computeCollisionResponse();
+	}
+
+	void update(float deltaTime)
+	{
+		if (fixedDeltaTime < 0)
+		{
+			computeSimulation(deltaTime);
+		}
+		else
+		{
+			timeSinceLastUpdate += deltaTime;
+			if (timeSinceLastUpdate > fixedDeltaTime)
+			{
+				timeSinceLastUpdate = fmodf(timeSinceLastUpdate, fixedDeltaTime);
+				computeSimulation(fixedDeltaTime);
+			}
+		}
+
 	};
 
 	/// <summary>
@@ -176,27 +231,29 @@ public:
 	/// <returns>instance of the body in the simulation</returns>
 	Rigidbody* createRigidbody(const Rigidbody& rigidbody)
 	{
-		bodies.push_back(rigidbody);
-		return &bodies.back();
+		Rigidbody& body = bodies[idCount] = rigidbody;
+		body.ID = idCount;
+		idCount++;
+		return &body;
 	};
 
-	bool removeRigidbody(Rigidbody* rigidbody)
+	bool removeRigidbody(Rigidbody* body)
 	{
-		for (int i = 0; i < bodies.size(); i++)
-		{
-			if (rigidbody == &bodies[i])
-			{
-				bodies.erase(bodies.begin() + i);
-				return true;
-			}
-		}
-
-		return false;
+		return bodies.erase(body->ID);
 	};
+
+	void removeRigidbodies(std::vector<Rigidbody*>& input)
+	{
+		for (Rigidbody* body : input)
+		{
+			removeRigidbody(body);
+		}
+		input.clear();
+	}
 
 	void debugDrawRigidbodies()
 	{
-		for (Rigidbody& body : bodies)
-			quickdraw::drawRigidbody(body);
+		for (Rigidbody* body : sorted_bodies)
+			quickdraw::drawRigidbody(*body);
 	};
 };

@@ -12,6 +12,8 @@ public:
 		Circle circle;
 	};
 
+	unsigned int ID = 0;
+
 	ShapeType shapeType;
 	//Scale not taken in account
 	Transform transform;
@@ -26,6 +28,17 @@ public:
 	Vec2 centerOfGravity;
 	float mass = 1;
 	float gravityScale = 1;
+
+	Rigidbody():
+		transform(),
+		linearVelocity(),
+		angularVelocity(),
+		freezeRotation(false),
+		kinematic(false),
+		centerOfGravity(),
+		mass(1),
+		gravityScale(1)
+	{};
 
 	Rigidbody(const Rigidbody& other)
 		: 
@@ -53,6 +66,15 @@ public:
 	};
 
 	Rigidbody(ShapeType type)
+		:
+		transform(),
+		linearVelocity(),
+		angularVelocity(),
+		freezeRotation(false),
+		kinematic(false),
+		centerOfGravity(),
+		mass(1),
+		gravityScale(1)
 	{
 		shapeType = type;
 		switch (shapeType)
