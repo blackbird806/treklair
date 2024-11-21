@@ -28,7 +28,7 @@ export struct CollisionPair
 export class Simulation
 {
 private:
-	float fixedDeltaTime = 1.0 / 30.0; // 30 tick par sec
+	float fixedDeltaTime = 1.0 / 120.0; // tic
 	float timeSinceLastUpdate = 0;
 	unsigned int idCount = 0;
 	std::unordered_map<int, Rigidbody> bodies; //bodies stored in this
@@ -172,9 +172,6 @@ private:
 		}
 	};
 #pragma endregion
-
-
-	
 
 public:
 	bool simulate = true;

@@ -303,7 +303,6 @@ bool boxSAT(const Box& a, const Box& b, const Transform& aT, const Transform& bT
 			contacts.push_back(contact);
 		}
 	}
-
 	return true;
 };
 
@@ -323,7 +322,7 @@ export bool computeCircleContacts(const Circle& a, const Circle& b, const Transf
 	float dist = diff.length();
 	float radiusSum = a.radius + b.radius;
 	Contact contact;
-	contact.direction = diff.getNormalized();
+	contact.direction = diff / dist;
 	contact.point = aT.position + contact.direction * a.radius;
 	contact.depth = radiusSum - dist;
 	contacts.push_back(contact);
@@ -344,7 +343,7 @@ export bool computeAABBCircleContacts(const AABB& a, const Circle& b, const Vec2
 	Contact contact;
 	contact.point = closestPoint;
 	contact.depth = closestDist - b.radius;
-	contact.direction = diff / closestDist;
+	contact.direction = closestDist == 0 ? Vec2::Zero : diff / closestDist;
 
 	contacts.push_back(contact);
 

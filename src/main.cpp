@@ -131,7 +131,7 @@ int main(int argc, char** argv)
 		{
 			Rigidbody rb = input_map_pressed[SDLK_C] ? circle : box;
 			rb.transform.position = mousePos;
-			rb.transform.rotation = M_PI / 4;
+			rb.transform.rotation = 0;
 			createdBodies.push_back(simulation.createRigidbody(rb));
 		}
 

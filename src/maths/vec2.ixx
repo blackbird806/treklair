@@ -153,7 +153,9 @@ export struct Vec2
 
 	/*constexpr*/ void normalize() noexcept
 	{
-		*this = *this / length();
+		float sqr = sqrLength();
+		
+		*this = sqr < FLT_EPSILON && sqr > -FLT_EPSILON ? 0 :  *this / sqrt(sqrLength());
 	}
 
 	/*constexpr*/ Vec2 getNormalized() const noexcept
