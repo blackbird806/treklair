@@ -166,9 +166,8 @@ private:
 				pair.second->transform.position += shortest.direction * shortest.depth * massRatio2;
 			}
 
-			SDL_SetRenderDrawColor(sdl_renderer, 255, 0, 0, 255);
-			quickdraw::drawLine(shortest.point, shortest.point + shortest.direction * shortest.depth);
-			//quickdraw::drawLineTime(shortest.point, shortest.point + shortest.direction * shortest.depth * 10, 1);
+			//quickdraw::drawLine(shortest.point, shortest.point + shortest.direction * shortest.depth);
+			quickdraw::drawLineTime(shortest.point, shortest.point + shortest.direction * shortest.depth, 1);
 			std::print("\nCollision occured : {0}", shortest.depth);
 		}
 	};

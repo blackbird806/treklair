@@ -1,4 +1,6 @@
-﻿#include <format>
+﻿#define _USE_MATH_DEFINES
+
+#include <format>
 #include <print>
 #include <unordered_map>
 
@@ -10,6 +12,7 @@
 #include <SDL3/SDL_opengl.h>
 #include <string>
 #include <vector>
+#include <cmath>
 
 import treklair;
 
@@ -35,6 +38,7 @@ static void setInput(SDL_Keycode key, bool value)
 
 int main(int argc, char** argv)
 {
+	std::srand(time(0));
 	Uint64 timeNow = SDL_GetPerformanceCounter();
 	Uint64 timeLast = 0;
 	float deltaTime = 0;
@@ -127,6 +131,7 @@ int main(int argc, char** argv)
 		{
 			Rigidbody rb = input_map_pressed[SDLK_C] ? circle : box;
 			rb.transform.position = mousePos;
+			rb.transform.rotation = M_PI / 4;
 			createdBodies.push_back(simulation.createRigidbody(rb));
 		}
 
@@ -168,9 +173,12 @@ int main(int argc, char** argv)
 		}
 
 
-		SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 255, 255);
+		SDL_SetRenderDrawColor(sdl_renderer, 255, 0, 0, 255);
 		quickdraw::updateDebugDraw(deltaTime);
+
+		SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 255, 255);
 		simulation.debugDrawRigidbodies();
+
 		SDL_SetRenderDrawColor(sdl_renderer, 255, 0, 0, 255);
 		simulation.update(deltaTime * timeDilation);
 

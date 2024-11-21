@@ -91,12 +91,30 @@ public:
 	}
 
 	Rigidbody(const Box& _box)
+		:
+		transform(),
+		linearVelocity(),
+		angularVelocity(),
+		freezeRotation(false),
+		kinematic(false),
+		centerOfGravity(),
+		mass(1),
+		gravityScale(1)
 	{
 		shapeType = BoxShape;
 		box = _box;
 	}
 
 	Rigidbody(const Circle& _circle)
+		:
+		transform(),
+		linearVelocity(),
+		angularVelocity(),
+		freezeRotation(false),
+		kinematic(false),
+		centerOfGravity(),
+		mass(1),
+		gravityScale(1)
 	{
 		shapeType = CircleShape;
 		circle = _circle;

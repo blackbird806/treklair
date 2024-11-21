@@ -11,9 +11,9 @@ import :globals;
 
 export struct Contact
 {
-	Vec2 point;
-	Vec2 direction;
 	float depth;
+	Vec2 direction;
+	Vec2 point;
 };
 
 export enum ShapeType
@@ -171,7 +171,6 @@ export bool AABBBoxOverlap(const AABB& a, const Box& b, const Transform& aT, con
 	return false;
 };
 
-
 #pragma endregion
 
 #pragma region Contacts
@@ -237,16 +236,16 @@ int projectCornerOnAxis(Vec2 axis, Vec2 corners[4], float halfSize, float& depth
 	}
 	if (bMaxProj > -halfSize && bMaxProj < halfSize)
 	{
-		std::memcpy(cornerContactIndex, maxProjIndex, sizeof(minProjIndex));
-		depth = -bMaxProj - halfSize; //- - halfsize
+		std::memcpy(cornerContactIndex, maxProjIndex, sizeof(maxProjIndex));
+		depth = -halfSize - bMaxProj;
 		return maxContactCount;
 	}
 	//case of completely inside
 	if (bMinProj < -halfSize && bMaxProj > halfSize)
 	{
-		float minProjDif = bMinProj - halfSize;
+		float minProjDif = -bMinProj - halfSize;
 		float maxProjDif = bMaxProj + halfSize; // jsuis un génie ???
-		if (minProjDif > maxProjDif)
+		if (-minProjDif > maxProjDif)
 		{
 			//min proj shortest
 			std::memcpy(cornerContactIndex, minProjIndex, sizeof(minProjIndex));
@@ -256,7 +255,7 @@ int projectCornerOnAxis(Vec2 axis, Vec2 corners[4], float halfSize, float& depth
 		}
 		else
 		{
-			std::memcpy(cornerContactIndex, maxProjIndex, sizeof(minProjIndex));
+			std::memcpy(cornerContactIndex, maxProjIndex, sizeof(maxProjIndex));
 			depth = -maxProjDif;
 			return maxContactCount;
 		}
@@ -264,9 +263,7 @@ int projectCornerOnAxis(Vec2 axis, Vec2 corners[4], float halfSize, float& depth
 	return 0;
 };
 
-
-
-bool boxSAT(const Box& a, const Box& b, const Transform& aT, const Transform& bT, std::vector<Contact>& contacts)
+bool boxSAT(const Box& a, const Box& b, const Transform& aT, const Transform& bT, std::vector<Contact>& contacts, float contactDirScale = 1.0f)
 {
 	//first box SAT
 	Vec2 axes[2];
@@ -301,8 +298,8 @@ bool boxSAT(const Box& a, const Box& b, const Transform& aT, const Transform& bT
 		{
 			Contact contact = Contact();
 			contact.point = translate * bCorners[cornerContactIndex[j]];
-			contact.depth = depth;
-			contact.direction = axes[i];
+			contact.depth = depth * contactDirScale;
+			contact.direction = axes[i] ;
 			contacts.push_back(contact);
 		}
 	}
@@ -316,7 +313,7 @@ export bool computeBoxContacts(const Box& a, const Box& b, const Transform& aT, 
 	if ((a.halfSize.sqrLength() + b.halfSize.sqrLength()) * 2 < (bT.position - aT.position).sqrLength())
 		return false;
 
-	return boxSAT(a, b, aT, bT, contacts) && boxSAT(b, a, bT, aT, contacts);
+	return boxSAT(a, b, aT, bT, contacts) && boxSAT(b, a, bT, aT, contacts, -1.0f);
 };
 
 //Circle contacts
@@ -368,6 +365,5 @@ export bool computeBoxCircleContacts(const Box& a, const Circle& b, const Transf
 
 	return collide;
 };
-
 
 #pragma endregion

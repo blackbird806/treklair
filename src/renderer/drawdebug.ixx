@@ -1,8 +1,10 @@
 ﻿module;
-#include <SDL3/SDL.h>
-#include <cassert>
-#include <numbers>
-#include <vector>
+#include <SDL3/SDL.h>;
+#include <cassert>;
+#include <numbers>;
+#include <list>;
+#include <vector>;
+#include <print>;
 export module treklair:quickRenderer;
 
 import :globals;
@@ -24,7 +26,6 @@ namespace quickdraw {
 
 	export void updateDebugDraw(float deltaTime)
 	{
-		std::vector<int> toErase;
 		for (int i = 0; i < lineTimes.size(); i++)
 		{
 			lineTimes[i].currentTime += deltaTime;
@@ -32,14 +33,10 @@ namespace quickdraw {
 
 			if (lineTimes[i].currentTime > lineTimes[i].time)
 			{
-				toErase.push_back(i);
+				lineTimes.erase(lineTimes.begin() +  i);
+				i--;
 			}
 		}
-		for (int i : toErase)
-		{
-			lineTimes.erase(lineTimes.begin() + i);
-		}
-
 	}
 
 	export void drawAABB
