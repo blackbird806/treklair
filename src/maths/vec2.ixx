@@ -177,14 +177,23 @@ export struct Vec2
 	}
 
 	//Select the closest min or max axis and project test on it
-	static Vec2 closestAxis(Vec2 test, Vec2 min, Vec2 max) noexcept
+	static Vec2 closestAxis(Vec2 test, Vec2 a, Vec2 b) noexcept
 	{
-		Vec2 mindist = closest(test, min, max);
-		if (mindist.x < mindist.y)
-			test.x = mindist.x;
-		else
-			test.y = mindist.y;
-		return test;
+		Vec2 res;
+		float data[4] = {a.x, a.y, b.x, b.y};
+		float closest = FLT_MAX;
+		for (int i = 0; i < 4; i++)
+		{
+			float diff = std::abs(data[i] - test[i % 2]);
+			if (diff >= closest)
+				continue;
+
+			closest = diff;
+			res = test;
+			res[i % 2] = data[i];
+		}
+		
+		return res;
 	}
 
 	static Vec2 closest(Vec2 test, Vec2 min, Vec2 max) noexcept
