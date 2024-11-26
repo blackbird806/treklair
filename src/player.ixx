@@ -1,11 +1,11 @@
-module;
+﻿module;
 #include <SDL3/SDL.h>
-#include "vec2.h"
 export module treklair:player;
+import :vec2;
 
 struct Player
 {
-	vec2 pos;
-	vec2 size;
+	Vec2 pos;
+	Vec2 size;
 	SDL_Texture* sprite;
 };

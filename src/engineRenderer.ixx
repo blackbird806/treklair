@@ -99,9 +99,9 @@ export struct EngineRenderer
 
 	void draw()
 	{
-		SDL_SetRenderTarget(sdl_renderer, nullptr);
-		SDL_SetRenderDrawColor(sdl_renderer, 10, 10, 10, 255);
-		SDL_RenderClear(sdl_renderer);
+		//SDL_SetRenderTarget(sdl_renderer, nullptr);
+		//SDL_SetRenderDrawColor(sdl_renderer, 10, 10, 10, 255);
+		//SDL_RenderClear(sdl_renderer);
 
 		int w, h;
 		SDL_GetWindowSize(sdl_window, &w, &h);

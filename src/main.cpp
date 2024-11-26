@@ -1,3 +1,5 @@
+﻿#define _USE_MATH_DEFINES
+
 #include <format>
 #include <print>
 #include <unordered_map>
@@ -8,12 +10,63 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
+#include <string>
+#include <vector>
+#include <cmath>
 
 import treklair;
 
+std::unordered_map<SDL_Keycode, bool> input_map;
+std::unordered_map<SDL_Keycode, bool> input_map_pressed;
+std::unordered_map<SDL_Keycode, bool> input_map_released;
+
+static void setInput(SDL_Keycode key, bool value)
+{
+	if (value)
+	{
+		if (input_map[key] == false)
+			input_map_pressed[key] = true;
+		input_map[key] = true;
+	}
+	else
+	{
+		if (input_map[key] == true)
+			input_map_released[key] = true;
+		input_map[key] = false;
+	}
+};
+
 int main(int argc, char** argv)
 {
-	std::print("hello {}\n", "world");
+	std::srand(time(0));
+	Uint64 timeNow = SDL_GetPerformanceCounter();
+	Uint64 timeLast = 0;
+	float deltaTime = 0;
+	float timeDilation = 1.0f;
+
+	Simulation simulation;
+
+	Rigidbody base = Rigidbody(Box({ 1000,50 }));
+	base.transform.position = { 500, 650 };
+	base.inverseMass = 0;
+	base.transform.rotation = 0;
+	simulation.createRigidbody(base);
+	base.transform.position = { 500, 50 };
+	simulation.createRigidbody(base);
+
+	Rigidbody side = Rigidbody(Box({50,800}));
+	side.transform.position = { 50, 0};
+	side.inverseMass = 0;
+	side.transform.rotation = 0;
+	simulation.createRigidbody(side);
+	side.transform.position = {1050, 0};
+	simulation.createRigidbody(side);
+
+	Rigidbody box = Rigidbody(Box({ 25, 25 }));
+	Rigidbody circle = Rigidbody(Circle({ 25 }));
+	std::vector<Rigidbody*> createdBodies;
+	
+	std::print("hello {}", "world");
 
 	if (!SDL_Init(SDL_INIT_VIDEO))
 	{
@@ -30,11 +83,21 @@ int main(int argc, char** argv)
 	EngineRenderer engineRenderer;
 	engineRenderer.initImgui();
 	bool done = false;
-	std::unordered_map<SDL_Keycode, bool> input_map;
-	World world(10, 10);
-	engineRenderer.worldEditor.world = &world;
+	
+	Vec2 mousePos;
+	bool keyPressed;
+
+	GameRenderer gameRenderer;
+	World world(1, 1);
+
 	while (!done)
 	{
+		timeLast = timeNow;
+		timeNow = SDL_GetPerformanceCounter();
+		deltaTime = (float)((timeNow - timeLast) / (float)SDL_GetPerformanceFrequency());
+
+		input_map_pressed.clear();
+		input_map_released.clear();
 		SDL_Event event;
 
 		while (SDL_PollEvent(&event))
@@ -49,15 +112,65 @@ int main(int argc, char** argv)
 
 			else if (event.type == SDL_EVENT_KEY_DOWN)
 			{
-				input_map[event.key.key] = true;
+				setInput(event.key.key, true);
 			}
 			else if (event.type == SDL_EVENT_KEY_UP)
 			{
-				input_map[event.key.key] = false;
+				setInput(event.key.key, false);
+			}
+			else if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
+			{
+				setInput(event.key.key, true);
+			}
+			else if (event.type == SDL_EVENT_MOUSE_BUTTON_UP)
+			{
+				setInput(event.key.key, false);
 			}
 		}
-		
+
+		SDL_GetMouseState(&mousePos.x, &mousePos.y);
+		mousePos -= Vec2(100, 0);
 		engineRenderer.startFrame();
+
+		if (input_map_pressed[SDLK_C] || input_map_pressed[SDLK_B])
+		{
+			Rigidbody rb = input_map_pressed[SDLK_C] ? circle : box;
+			rb.transform.position = mousePos;
+			rb.transform.rotation = 0;
+			createdBodies.push_back(simulation.createRigidbody(rb));
+		}
+
+		if (input_map_pressed[SDLK_F1])
+			simulation.simulate = !simulation.simulate;
+
+		if (input_map_pressed[SDLK_F2])
+			timeDilation = timeDilation == 0 ? 1 : 0;
+
+		//clear created objects
+		if (input_map_pressed[SDLK_F3])
+		{
+			simulation.removeRigidbodies(createdBodies);
+			createdBodies.clear();
+		}
+
+		if (input_map_pressed[SDLK_F9])
+			simulation.computeSimulation(1.0f / 10.0f);
+		
+		//gameRenderer.drawGame(world);
+
+		//SDL_SetRenderLogicalPresentation(sdl_renderer, gameSizeX, gameSizeY, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+		//SDL_SetRenderTarget(sdl_renderer, gameRenderer.mainRenderTarget);
+		SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 0, 255);
+		SDL_RenderClear(sdl_renderer);
+
+		SDL_SetRenderDrawColor(sdl_renderer, 255, 0, 0, 255);
+		quickdraw::updateDebugDraw(deltaTime);
+
+		SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 255, 255);
+		simulation.debugDrawRigidbodies();
+
+		SDL_SetRenderDrawColor(sdl_renderer, 255, 0, 0, 255);
+		simulation.update(deltaTime * timeDilation);
 
 		engineRenderer.engineUI();
 

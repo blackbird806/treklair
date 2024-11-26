@@ -2,7 +2,6 @@
 
 #include <cassert>
 #include <vector>
-#include "vec2.h"
 
 export module treklair:world;
 

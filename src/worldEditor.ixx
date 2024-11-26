@@ -99,7 +99,6 @@ public:
 			int const gridSizeX = tile_size * scaleFactorX;
 			int const gridSizeY = tile_size * scaleFactorY;
 
-
 			for (int i = 0; i < (canvas_sz.x / gridSizeX) + 1; i++)
 			{
 				int const x = i * gridSizeX;
@@ -121,7 +120,6 @@ public:
 			if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
 			{
 				std::print("click\n");
-				world->tiles[5].type = (TileType)item_current;
 			}
 		}
 
