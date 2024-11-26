@@ -2,6 +2,7 @@
 import :shapes;
 import :transform;
 import :globals;
+import :matrix2;
 
 export class Rigidbody
 {
@@ -23,10 +24,10 @@ public:
 	//In radiants
 	float angularVelocity;
 	bool freezeRotation = false;
-	bool kinematic = false;
 	
 	Vec2 centerOfGravity;
-	float mass = 1;
+	float inverseMass = 1;
+	Matrix2 inverseInertiaTensor;
 	float gravityScale = 1;
 
 	Rigidbody():
@@ -34,9 +35,8 @@ public:
 		linearVelocity(),
 		angularVelocity(),
 		freezeRotation(false),
-		kinematic(false),
 		centerOfGravity(),
-		mass(1),
+		inverseMass(1),
 		gravityScale(1)
 	{};
 
@@ -47,9 +47,8 @@ public:
 		linearVelocity(other.linearVelocity),
 		angularVelocity(other.angularVelocity),
 		freezeRotation(other.freezeRotation),
-		kinematic(other.kinematic),
 		centerOfGravity(other.centerOfGravity),
-		mass(other.mass),
+		inverseMass(other.inverseMass),
 		gravityScale(other.gravityScale)
 	{
 		switch (shapeType)
@@ -71,9 +70,8 @@ public:
 		linearVelocity(),
 		angularVelocity(),
 		freezeRotation(false),
-		kinematic(false),
 		centerOfGravity(),
-		mass(1),
+		inverseMass(1),
 		gravityScale(1)
 	{
 		shapeType = type;
@@ -96,9 +94,8 @@ public:
 		linearVelocity(),
 		angularVelocity(),
 		freezeRotation(false),
-		kinematic(false),
 		centerOfGravity(),
-		mass(1),
+		inverseMass(1),
 		gravityScale(1)
 	{
 		shapeType = BoxShape;
@@ -111,13 +108,17 @@ public:
 		linearVelocity(),
 		angularVelocity(),
 		freezeRotation(false),
-		kinematic(false),
 		centerOfGravity(),
-		mass(1),
+		inverseMass(1),
 		gravityScale(1)
 	{
 		shapeType = CircleShape;
 		circle = _circle;
+	}
+
+	bool isKinematic()
+	{
+		return inverseMass == 0;
 	}
 
 	void updateNoCCD(float deltaTime)
@@ -134,7 +135,7 @@ public:
 
 	void update(float deltaTime)
 	{
-		if (kinematic)
+		if (isKinematic())
 		{
 			//TO DO: Calculate estimated velocities with last transformations
 			return;
@@ -145,14 +146,14 @@ public:
 
 	void addImpulse(Vec2 impulse)
 	{
-		if (kinematic)
+		if (isKinematic())
 			return;
-		linearVelocity += impulse / mass;
+		linearVelocity += impulse * inverseMass;
 	};
 
 	void addImpulseAtPos(Vec2 impulse, Vec2 position)
 	{
-		// ?? torque shit
+		
 	};
 
 };

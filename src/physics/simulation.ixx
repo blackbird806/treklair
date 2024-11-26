@@ -116,6 +116,10 @@ private:
 	{
 		for (CollisionPair pair : overlapingPairs)
 		{
+			// if both kinematic return
+			if (pair.second->inverseMass + pair.first->inverseMass <= FLT_EPSILON)
+				continue;
+
 			Contact shortest;
 			shortest.depth = FLT_MAX;
 			for (Contact c : pair.contacts)
@@ -133,37 +137,23 @@ private:
 			//Collision velocity
 			Vec2 normal = shortest.direction;
 			Vec2 pairVelocity = pair.first->linearVelocity - pair.second->linearVelocity;
-			float impulse = -0.5 * pairVelocity.dot(normal) * (pair.first->mass + pair.second->mass);
+			float impulse = -2 * pairVelocity.dot(normal) / (pair.first->inverseMass + pair.second->inverseMass);
 			Vec2 vectorImpulse = normal * impulse;
 
-			pair.first->addImpulse(vectorImpulse);
-			pair.second->addImpulse(-vectorImpulse);
-
-			//Depenetration
-			if (pair.second->kinematic && pair.first->kinematic)
-				return;
-
-			float massRatio1 = 0;
-			float massRatio2 = 0;
-
-			if (pair.first->kinematic)
-			{
-				massRatio1 = 0; massRatio2 = 1;
-			}
-			else if (pair.second->kinematic)
-			{
-				massRatio1 = 1; massRatio2 = 0;
-			}
-			else
-			{
-				massRatio1 = pair.first->mass / (pair.first->mass + pair.second->mass);
-				massRatio2 = pair.second->mass / (pair.first->mass + pair.second->mass);
-			}
 			if (simulate)
 			{
+				pair.first->addImpulse(vectorImpulse);
+				pair.second->addImpulse(-vectorImpulse);
+
+				//Depenetration
+				float pairInverseMass = (pair.first->inverseMass + pair.second->inverseMass);
+				float inverseMassRatio1 = pair.first->inverseMass / pairInverseMass;
+				float inverseMassRatio2 = pair.second->inverseMass / pairInverseMass;
+
+
 				shortest.depth += epsilon;
-				pair.first->transform.position -= shortest.direction * shortest.depth * massRatio1;
-				pair.second->transform.position += shortest.direction * shortest.depth * massRatio2;
+				pair.first->transform.position -= shortest.direction * shortest.depth * inverseMassRatio1;
+				pair.second->transform.position += shortest.direction * shortest.depth * inverseMassRatio2;
 			}
 
 			//quickdraw::drawLine(shortest.point, shortest.point + shortest.direction * shortest.depth);
