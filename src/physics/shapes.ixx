@@ -26,6 +26,7 @@ export struct AABB
 {
 	Vec2 min;
 	Vec2 max;
+
 };
 
 export inline Vec2 Center(const AABB& aabb)
@@ -338,16 +339,28 @@ export bool computeAABBCircleContacts(const AABB& a, const Circle& b, const Vec2
 	Vec2 clampDist = Vec2::clamp(distance, -boundsAABB, boundsAABB);
 	Vec2 closestPoint = centerAABB + clampDist;
 	Vec2 diff = (closestPoint - pT);
-	float closestDist = diff.length();
+	float closestDistSqr = diff.sqrLength();
+	if (closestDistSqr > b.radius * b.radius)
+		return false;
 
+	//test if circle inside box
+	if (closestDistSqr <= FLT_EPSILON)
+	{
+		clampDist = Vec2::closestAxis(distance, -boundsAABB, boundsAABB);
+		closestPoint = centerAABB + clampDist;
+		diff = ( pT - closestPoint);
+		closestDistSqr = diff.sqrLength();
+	}
+
+	float closestDist = sqrt(closestDistSqr);
 	Contact contact;
 	contact.point = closestPoint;
 	contact.depth = closestDist - b.radius;
-	contact.direction = closestDist == 0 ? Vec2::Zero : diff / closestDist;
+	contact.direction = diff / closestDist;
 
 	contacts.push_back(contact);
 
-	return contact.depth <= 0;
+	return true;
 };
 
 export bool computeBoxCircleContacts(const Box& a, const Circle& b, const Transform& aT, const Transform& bT, std::vector<Contact>& contacts)
@@ -358,6 +371,9 @@ export bool computeBoxCircleContacts(const Box& a, const Circle& b, const Transf
 	Matrix3 aMatInverse = Matrix3::inverse(aMat);
 	Vec2 bPosInv = aMatInverse * (bT.position);
 	bool collide = computeAABBCircleContacts(a.ToAABB(Vec2()), b, bPosInv, contacts);
+	if (contacts.empty())
+		return collide;
+		
 	Contact& c = contacts.back();
 	c.point = aMat * c.point;
 	c.direction = aMatRota * c.direction;

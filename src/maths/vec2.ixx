@@ -176,6 +176,25 @@ export struct Vec2
 		return Vec2(std::clamp(test.x, min.x, max.x), std::clamp(test.y, min.y, max.y));
 	}
 
+	//Select the closest min or max axis and project test on it
+	static Vec2 closestAxis(Vec2 test, Vec2 min, Vec2 max) noexcept
+	{
+		Vec2 mindist = closest(test, min, max);
+		if (mindist.x < mindist.y)
+			test.x = mindist.x;
+		else
+			test.y = mindist.y;
+		return test;
+	}
+
+	static Vec2 closest(Vec2 test, Vec2 min, Vec2 max) noexcept
+	{
+		Vec2 res;
+		res.x = std::abs(min.x - test.x) < std::abs(max.x - test.x) ? min.x : max.x;
+		res.y = std::abs(min.y - test.y) < std::abs(max.y - test.y) ? min.y : max.y;
+		return res;
+	}
+
 	static inline Vec2 rotate(Vec2 vec, float angle)
 	{
 		Vec2 rotated;
