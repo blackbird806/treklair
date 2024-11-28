@@ -54,7 +54,6 @@ int main(int argc, char** argv)
 	base.transform.position = { 500, 50 };
 	simulation.createRigidbody(base);
 
-
 	Rigidbody side = Rigidbody(Box({50,800}));
 	side.transform.position = { 50, 0};
 	side.inverseMass = 0;
@@ -63,7 +62,7 @@ int main(int argc, char** argv)
 	side.transform.position = {1050, 0};
 	simulation.createRigidbody(side);
 
-	Rigidbody box = Rigidbody(Box({ 25, 25 }));
+	Rigidbody box = Rigidbody(Box({ 100, 25 }));
 	Rigidbody circle = Rigidbody(Circle({ 25 }));
 	std::vector<Rigidbody*> createdBodies;
 	

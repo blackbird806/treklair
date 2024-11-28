@@ -1,8 +1,13 @@
-﻿export module treklair:rigidbody;
+﻿module;
+#define _USE_MATH_DEFINES
+#include <cmath>
+
+export module treklair:rigidbody;
 import :shapes;
 import :transform;
 import :globals;
 import :matrix2;
+import :matrix3;
 
 export class Rigidbody
 {
@@ -27,8 +32,9 @@ public:
 	
 	Vec2 centerOfGravity;
 	float inverseMass = 1;
-	Matrix2 inverseInertiaTensor;
+	float inverseInertia = 1;
 	float gravityScale = 1;
+	float elasticity = 1;
 
 	Rigidbody():
 		transform(),
@@ -37,7 +43,8 @@ public:
 		freezeRotation(false),
 		centerOfGravity(),
 		inverseMass(1),
-		gravityScale(1)
+		gravityScale(1),
+		elasticity(1)
 	{};
 
 	Rigidbody(const Rigidbody& other)
@@ -49,7 +56,8 @@ public:
 		freezeRotation(other.freezeRotation),
 		centerOfGravity(other.centerOfGravity),
 		inverseMass(other.inverseMass),
-		gravityScale(other.gravityScale)
+		gravityScale(other.gravityScale),
+		elasticity(other.elasticity)
 	{
 		switch (shapeType)
 		{
@@ -72,7 +80,8 @@ public:
 		freezeRotation(false),
 		centerOfGravity(),
 		inverseMass(1),
-		gravityScale(1)
+		gravityScale(1),
+		elasticity(1)
 	{
 		shapeType = type;
 		switch (shapeType)
@@ -96,7 +105,8 @@ public:
 		freezeRotation(false),
 		centerOfGravity(),
 		inverseMass(1),
-		gravityScale(1)
+		gravityScale(1),
+		elasticity(1)
 	{
 		shapeType = BoxShape;
 		box = _box;
@@ -110,16 +120,33 @@ public:
 		freezeRotation(false),
 		centerOfGravity(),
 		inverseMass(1),
-		gravityScale(1)
+		gravityScale(1),
+		elasticity(1)
 	{
 		shapeType = CircleShape;
 		circle = _circle;
+	}
+
+	void computeInertiaTensor()
+	{
+		switch (shapeType)
+		{
+		case BoxShape:
+			inverseInertia = inverseMass / ( (box.halfSize.x * box.halfSize.x + box.halfSize.y * box.halfSize.y) * 1);
+			break;
+		case CircleShape:
+			inverseInertia = 0.5 * inverseMass / (circle.radius * circle.radius);
+			break;
+		default:
+			break;
+		}
 	}
 
 	bool isKinematic()
 	{
 		return inverseMass == 0;
 	}
+
 
 	void updateNoCCD(float deltaTime)
 	{
@@ -151,9 +178,38 @@ public:
 		linearVelocity += impulse * inverseMass;
 	};
 
-	void addImpulseAtPos(Vec2 impulse, Vec2 position)
+	void addAngularImpulse(float impulse)
 	{
-		
+		angularVelocity += impulse * inverseInertia;
 	};
 
+	void addImpulseAtPos(Vec2 impulse, Vec2 position)
+	{
+		Vec2 diff = position - transform.position;
+		float dist = diff.length();
+		Vec2 normal = diff / dist;
+		float angularImpact = normal.cross(impulse) * dist;
+		float torque = angularImpact * inverseInertia;
+		Vec2 accel = impulse * inverseMass;
+		linearVelocity += (accel);
+		angularVelocity += (torque);
+	};
+
+	Vec2 velocityAtPos(Vec2 position)
+	{
+		Vec2 diff = (position - transform.position);
+		float dist = diff.length();
+		return linearVelocity + angularVelocityVector(position, dist);
+	}
+
+	Vec2 velocityAtPosLocal(Vec2 position)
+	{
+		float dist = (position).length();
+		return linearVelocity + angularVelocityVector(position, dist);
+	}
+
+	Vec2 angularVelocityVector(Vec2 normal, float distance)
+	{
+		return normal.tengent() * (angularVelocity / distance * inverseInertia);
+	}
 };

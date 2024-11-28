@@ -6,6 +6,7 @@
 export module treklair:shapes;
 
 import :matrix3;
+import :matrix2;
 import :vec2;
 import :globals;
 
@@ -309,8 +310,8 @@ bool boxSAT(const Box& a, const Box& b, const Transform& aT, const Transform& bT
 export bool computeBoxContacts(const Box& a, const Box& b, const Transform& aT, const Transform& bT, std::vector<Contact>& contacts)
 {
 	//Bounding sphere distance check for quick check opti
-	if ((a.halfSize.sqrLength() + b.halfSize.sqrLength()) < (bT.position - aT.position).sqrLength())
-		return false;
+	//if ((a.halfSize.sqrLength() + b.halfSize.sqrLength()) < (bT.position - aT.position).sqrLength())
+		//return false;
 
 	return boxSAT(a, b, aT, bT, contacts) && boxSAT(b, a, bT, aT, contacts, -1.0f);
 };
@@ -344,7 +345,6 @@ export bool computeAABBCircleContacts(const AABB& a, const Circle& b, const Vec2
 
 	Contact contact;
 
-
 	//test if circle inside box
 	if (closestDistSqr <= FLT_EPSILON)
 	{
@@ -372,8 +372,8 @@ export bool computeAABBCircleContacts(const AABB& a, const Circle& b, const Vec2
 export bool computeBoxCircleContacts(const Box& a, const Circle& b, const Transform& aT, const Transform& bT, std::vector<Contact>& contacts)
 {
 	//Bounding sphere distance check for quick check opti
-	if ((a.halfSize.sqrLength() + b.radius * b.radius) < (bT.position - aT.position).sqrLength())
-		return false;
+	//if ((a.halfSize.sqrLength() + b.radius * b.radius) < (bT.position - aT.position).sqrLength())
+	//	return false;
 
 	Matrix3 aMatTrans = Matrix3::translation(aT.position);
 	Matrix3 aMatRota = Matrix3::rotation(aT.rotation);

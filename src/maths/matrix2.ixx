@@ -32,6 +32,12 @@ export struct Matrix2
 				"Invalid index : " + std::to_string(row) + "," + std::to_string(column) + " is out of range");
 		return data[row * 2 + column];
 	};
+	
+	float& operator[](unsigned int i)
+	{
+		return data[i];
+	}
+
 
 	Matrix2& operator=(const Matrix2& other)
 	{
@@ -265,6 +271,48 @@ export struct Matrix2
 		return adjoint(matrix) / det;
 	}
 	*/
+
+	static Matrix2 rotation(float rotation)
+	{
+		return Matrix2(
+			std::cos(rotation), -std::sin(rotation),
+			std::sin(rotation), std::cos(rotation));
+	}
+
+	static Matrix2 rotate(const Matrix2& matrix, float _rotation)
+	{
+		return matrix * rotation(_rotation);
+	}
+
+	static Matrix2 scaling(const Vec2& scale)
+	{
+		return Matrix2(
+			scale.x, 0,
+			0, scale.y);
+	}
+
+	static Matrix2 scale(const Matrix2& matrix, const Vec2& scale)
+	{
+		return matrix * scaling(scale);
+	}
+
+	static Matrix2 invInertiaTensorBox(float invMass, float width, float height)
+	{
+		Matrix2 mat;
+		float scalar = 1.0 / 12.0 * invMass;
+		mat[0] = scalar * (1.0 / height);
+		mat[3] = scalar * (1.0 / width);
+		return mat;
+	}
+
+	static Matrix2 invInertiaTensorCircle(float invMass, float radius)
+	{
+		Matrix2 mat;
+		float scalar = 4 * invMass * (1.0 / (radius * radius));
+		mat[0] = scalar;
+		mat[3] = scalar;
+		return mat;
+	}
 };
 
 const Matrix2 Matrix2::Identity = Matrix2(

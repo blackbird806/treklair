@@ -135,21 +135,36 @@ private:
 				}
 			}
 			//Collision velocity
+			// 
+			//Compute linear velocity of both bodies at position
+			float elasticity = pair.first->elasticity * pair.second->elasticity;
 			Vec2 normal = shortest.direction;
-			Vec2 pairVelocity = pair.first->linearVelocity - pair.second->linearVelocity;
-			float impulse = -2 * pairVelocity.dot(normal) / (pair.first->inverseMass + pair.second->inverseMass);
+			Vec2 diff1 = shortest.point - pair.first->transform.position;
+			Vec2 diff2 = shortest.point - pair.second->transform.position;
+			float dist1 = diff1.length();
+			float dist2 = diff2.length();
+
+			Vec2 ang1 = pair.first->angularVelocityVector(diff1 / dist1, dist1);
+			Vec2 ang2 = pair.second->angularVelocityVector(diff2 / dist2, dist2);
+			quickdraw::drawLineTime(shortest.point, shortest.point + ang1, 1);
+			quickdraw::drawLineTime(shortest.point, shortest.point + ang2, 1);
+			Vec2 vel1 = pair.first->linearVelocity + ang1;
+			Vec2 vel2 = pair.second->linearVelocity + ang2;
+
+
+			Vec2 pairVelocity = vel1 - vel2;
+			float impulse = -(1 + elasticity) * pairVelocity.dot(normal) / (pair.first->inverseMass + pair.second->inverseMass);
 			Vec2 vectorImpulse = normal * impulse;
 
 			if (simulate)
 			{
-				pair.first->addImpulse(vectorImpulse);
-				pair.second->addImpulse(-vectorImpulse);
+				pair.first->addImpulseAtPos(vectorImpulse, shortest.point);
+				pair.second->addImpulseAtPos(-vectorImpulse, shortest.point);
 
 				//Depenetration
 				float pairInverseMass = (pair.first->inverseMass + pair.second->inverseMass);
 				float inverseMassRatio1 = pair.first->inverseMass / pairInverseMass;
 				float inverseMassRatio2 = pair.second->inverseMass / pairInverseMass;
-
 
 				shortest.depth += epsilon;
 				pair.first->transform.position -= shortest.direction * shortest.depth * inverseMassRatio1;
@@ -157,7 +172,6 @@ private:
 			}
 
 			//quickdraw::drawLine(shortest.point, shortest.point + shortest.direction * shortest.depth);
-			quickdraw::drawLineTime(shortest.point, shortest.point + shortest.direction * shortest.depth, 1);
 			std::print("\nCollision occured : {0}", shortest.depth);
 		}
 	};
@@ -219,6 +233,9 @@ public:
 	{
 		Rigidbody& body = bodies[idCount] = rigidbody;
 		body.ID = idCount;
+		body.computeInertiaTensor();
+
+		body.elasticity = 0;
 		idCount++;
 		return &body;
 	};

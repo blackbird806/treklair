@@ -54,16 +54,6 @@ export struct Vec2
 		return Vec2(-x, -y);
 	}
 
-	constexpr Vec2 operator+(float v) const noexcept
-	{
-		return Vec2(x + v, y + v);
-	}
-
-	constexpr Vec2 operator-(float v) const noexcept
-	{
-		return Vec2(x - v, y - v);
-	}
-
 	constexpr Vec2 operator-(Vec2 v) const noexcept
 	{
 		return Vec2(x - v.x, y - v.y);
@@ -139,6 +129,16 @@ export struct Vec2
 	constexpr float dot(Vec2 rhs) const noexcept
 	{
 		return x * rhs.x + y * rhs.y;
+	}
+
+	constexpr float cross(Vec2 rhs) const noexcept
+	{
+		return x * rhs.y - rhs.x * y;
+	}
+
+	constexpr Vec2 tengent() const noexcept
+	{
+		return { y, -x };
 	}
 
 	constexpr float sqrLength() const noexcept
