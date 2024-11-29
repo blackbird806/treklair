@@ -166,17 +166,20 @@ private:
 				
 				Vec2 tangentVelo = (pairVelocity - normal.dot(pairVelocity));
 				float tangentSize = tangentVelo.length();
-				Vec2 frictionAccel = tangentVelo/tangentSize * friction * fixedDeltaTime;
-				//if longer than tangent velocity, set impulse friction to -tangent
-				if (frictionAccel.dot(tangentVelo / tangentSize) < -tangentSize)
-					frictionAccel = -tangentVelo;
+				if (tangentSize > FLT_EPSILON)
+				{
+					Vec2 frictionAccel = tangentVelo / tangentSize * friction * fixedDeltaTime;
+					//if longer than tangent velocity, set impulse friction to -tangent
+					if (frictionAccel.dot(tangentVelo / tangentSize) < -tangentSize)
+						frictionAccel = -tangentVelo;
 
-				if(!pair.first->isKinematic())
-					pair.first->addImpulseAtPos(-frictionAccel / pair.first->inverseMass, shortest.point);
-				if (!pair.second->isKinematic())
-					pair.second->addImpulseAtPos(frictionAccel / pair.second->inverseMass, shortest.point);
+					if (!pair.first->isKinematic())
+						pair.first->addImpulseAtPos(-frictionAccel / pair.first->inverseMass, shortest.point);
+					if (!pair.second->isKinematic())
+						pair.second->addImpulseAtPos(frictionAccel / pair.second->inverseMass, shortest.point);
 
-				quickdraw::drawLineTime(shortest.point, shortest.point + frictionAccel, 1);
+					quickdraw::drawLineTime(shortest.point, shortest.point + frictionAccel, 1);
+				}
 
 				//Depenetration
 				float inverseMassRatio1 = pair.first->inverseMass / pairInverseMass;
