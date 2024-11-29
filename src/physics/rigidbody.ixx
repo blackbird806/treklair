@@ -9,6 +9,12 @@ import :globals;
 import :matrix2;
 import :matrix3;
 
+struct PhysicsMaterial
+{
+	float elasticity = 0;
+	float friction = 10;
+};
+
 export class Rigidbody
 {
 public:
@@ -25,18 +31,18 @@ public:
 	Transform transform;
 
 	Vec2 linearVelocity;
-	
+
 	//In radiants
 	float angularVelocity;
 	bool freezeRotation = false;
-	
+
 	Vec2 centerOfGravity;
 	float inverseMass = 1;
 	float inverseInertia = 1;
 	float gravityScale = 1;
-	float elasticity = 1;
+	PhysicsMaterial material;
 
-	Rigidbody():
+	Rigidbody() :
 		transform(),
 		linearVelocity(),
 		angularVelocity(),
@@ -44,11 +50,11 @@ public:
 		centerOfGravity(),
 		inverseMass(1),
 		gravityScale(1),
-		elasticity(1)
+		material()
 	{};
 
 	Rigidbody(const Rigidbody& other)
-		: 
+		:
 		shapeType(other.shapeType),
 		transform(other.transform),
 		linearVelocity(other.linearVelocity),
@@ -57,7 +63,7 @@ public:
 		centerOfGravity(other.centerOfGravity),
 		inverseMass(other.inverseMass),
 		gravityScale(other.gravityScale),
-		elasticity(other.elasticity)
+		material(other.material)
 	{
 		switch (shapeType)
 		{
@@ -81,7 +87,7 @@ public:
 		centerOfGravity(),
 		inverseMass(1),
 		gravityScale(1),
-		elasticity(1)
+		material()
 	{
 		shapeType = type;
 		switch (shapeType)
@@ -106,7 +112,7 @@ public:
 		centerOfGravity(),
 		inverseMass(1),
 		gravityScale(1),
-		elasticity(1)
+		material()
 	{
 		shapeType = BoxShape;
 		box = _box;
@@ -121,7 +127,7 @@ public:
 		centerOfGravity(),
 		inverseMass(1),
 		gravityScale(1),
-		elasticity(1)
+		material()
 	{
 		shapeType = CircleShape;
 		circle = _circle;
@@ -132,7 +138,7 @@ public:
 		switch (shapeType)
 		{
 		case BoxShape:
-			inverseInertia = inverseMass / ( (box.halfSize.x * box.halfSize.x + box.halfSize.y * box.halfSize.y) * 1);
+			inverseInertia = inverseMass / ((box.halfSize.x * box.halfSize.x + box.halfSize.y * box.halfSize.y) * 12);
 			break;
 		case CircleShape:
 			inverseInertia = 0.5 * inverseMass / (circle.radius * circle.radius);
@@ -154,11 +160,11 @@ public:
 		transform.rotation += angularVelocity * deltaTime;
 	};
 
-//	bool CCD;
-//	void UpdateCCD()
-//	{
-//		//ToDo CCD stuff
-//	};
+	//	bool CCD;
+	//	void UpdateCCD()
+	//	{
+	//		//ToDo CCD stuff
+	//	};
 
 	void update(float deltaTime)
 	{
@@ -186,9 +192,7 @@ public:
 	void addImpulseAtPos(Vec2 impulse, Vec2 position)
 	{
 		Vec2 diff = position - transform.position;
-		float dist = diff.length();
-		Vec2 normal = diff / dist;
-		float angularImpact = normal.cross(impulse) * dist;
+		float angularImpact = diff.cross(impulse);
 		float torque = angularImpact * inverseInertia;
 		Vec2 accel = impulse * inverseMass;
 		linearVelocity += (accel);
@@ -210,6 +214,11 @@ public:
 
 	Vec2 angularVelocityVector(Vec2 normal, float distance)
 	{
-		return normal.tengent() * (angularVelocity / distance * inverseInertia);
+		return normal.tengent() * (angularVelocity * inverseInertia * distance);
+	}
+
+	Vec2 angularVelocityVector(Vec2 localPosition)
+	{
+		return -localPosition.tengent() * (angularVelocity);
 	}
 };

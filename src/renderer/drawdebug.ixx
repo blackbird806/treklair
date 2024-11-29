@@ -61,25 +61,26 @@ namespace quickdraw {
 		SDL_RenderLines(sdl_renderer, points, 5);
 	};
 
-	export void drawCircle(float radius, const Vec2& pos, int pointNumber = 16)
+	export void drawCircle(float radius, const Vec2& pos, float rotation, int pointNumber = 16)
 	{
 		assert(pointNumber < 64);
-		SDL_FPoint points[65];
+		SDL_FPoint points[66];
 
-		float theta = 0;
+		float theta = rotation;
 		float step = std::numbers::pi * 2 / pointNumber;
 
-		for (int i = 0; i < pointNumber; i++)
+		for (int i = 0; i < pointNumber + 1; i++)
 		{
 			points[i].x = pos.x + radius * cos(theta);
 			points[i].y = pos.y + radius * sin(theta);
 			theta += step;
 		};
 
-		points[pointNumber].x = pos.x + radius;
-		points[pointNumber].y = pos.y;
+		points[pointNumber + 1].x = pos.x;
+		points[pointNumber + 1].y = pos.y;
 
-		SDL_RenderLines(sdl_renderer, points, pointNumber + 1);
+
+		SDL_RenderLines(sdl_renderer, points, pointNumber + 2);
 	};
 
 	export void drawRigidbody(const Rigidbody& rb)
@@ -87,7 +88,7 @@ namespace quickdraw {
 		switch (rb.shapeType)
 		{
 		case CircleShape:
-			drawCircle(rb.circle.radius, rb.transform.position);
+			drawCircle(rb.circle.radius, rb.transform.position, rb.transform.rotation);
 			break;
 		case BoxShape:
 			drawBoxRigidbody(rb);

@@ -64,6 +64,7 @@ int main(int argc, char** argv)
 
 	Rigidbody box = Rigidbody(Box({ 100, 25 }));
 	Rigidbody circle = Rigidbody(Circle({ 25 }));
+	//circle.angularVelocity = 10;
 	std::vector<Rigidbody*> createdBodies;
 	
 	std::print("hello {}", "world");

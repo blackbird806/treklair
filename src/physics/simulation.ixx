@@ -137,21 +137,18 @@ private:
 			//Collision velocity
 			// 
 			//Compute linear velocity of both bodies at position
-			float elasticity = pair.first->elasticity * pair.second->elasticity;
+			float elasticity = pair.first->material.elasticity * pair.second->material.elasticity;
+			float friction = pair.first->material.friction * pair.second->material.friction;
+			float pairInverseMass = (pair.first->inverseMass + pair.second->inverseMass);
+
 			Vec2 normal = shortest.direction;
 			Vec2 diff1 = shortest.point - pair.first->transform.position;
 			Vec2 diff2 = shortest.point - pair.second->transform.position;
-			float dist1 = diff1.length();
-			float dist2 = diff2.length();
 
-			Vec2 ang1 = pair.first->angularVelocityVector(diff1 / dist1, dist1);
-			Vec2 ang2 = pair.second->angularVelocityVector(diff2 / dist2, dist2);
-			quickdraw::drawLineTime(shortest.point, shortest.point + ang1, 1);
-			quickdraw::drawLineTime(shortest.point, shortest.point + ang2, 1);
+			Vec2 ang1 = pair.first->angularVelocityVector(diff1);
+			Vec2 ang2 = pair.second->angularVelocityVector(diff2);
 			Vec2 vel1 = pair.first->linearVelocity + ang1;
 			Vec2 vel2 = pair.second->linearVelocity + ang2;
-
-
 			Vec2 pairVelocity = vel1 - vel2;
 			float impulse = -(1 + elasticity) * pairVelocity.dot(normal) / (pair.first->inverseMass + pair.second->inverseMass);
 			Vec2 vectorImpulse = normal * impulse;
@@ -161,8 +158,27 @@ private:
 				pair.first->addImpulseAtPos(vectorImpulse, shortest.point);
 				pair.second->addImpulseAtPos(-vectorImpulse, shortest.point);
 
+				ang1 = pair.first->angularVelocityVector(diff1);
+				ang2 = pair.second->angularVelocityVector(diff2);
+				vel1 = pair.first->linearVelocity + ang1;
+				vel2 = pair.second->linearVelocity + ang2;
+				pairVelocity = vel1 - vel2;
+				
+				Vec2 tangentVelo = (pairVelocity - normal.dot(pairVelocity));
+				float tangentSize = tangentVelo.length();
+				Vec2 frictionAccel = tangentVelo/tangentSize * friction * fixedDeltaTime;
+				//if longer than tangent velocity, set impulse friction to -tangent
+				if (frictionAccel.dot(tangentVelo / tangentSize) < -tangentSize)
+					frictionAccel = -tangentVelo;
+
+				if(!pair.first->isKinematic())
+					pair.first->addImpulseAtPos(-frictionAccel / pair.first->inverseMass, shortest.point);
+				if (!pair.second->isKinematic())
+					pair.second->addImpulseAtPos(frictionAccel / pair.second->inverseMass, shortest.point);
+
+				quickdraw::drawLineTime(shortest.point, shortest.point + frictionAccel, 1);
+
 				//Depenetration
-				float pairInverseMass = (pair.first->inverseMass + pair.second->inverseMass);
 				float inverseMassRatio1 = pair.first->inverseMass / pairInverseMass;
 				float inverseMassRatio2 = pair.second->inverseMass / pairInverseMass;
 
@@ -235,7 +251,6 @@ public:
 		body.ID = idCount;
 		body.computeInertiaTensor();
 
-		body.elasticity = 0;
 		idCount++;
 		return &body;
 	};
