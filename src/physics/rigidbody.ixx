@@ -138,7 +138,7 @@ public:
 		switch (shapeType)
 		{
 		case BoxShape:
-			inverseInertia = inverseMass / ((box.halfSize.x * box.halfSize.x + box.halfSize.y * box.halfSize.y) * 12);
+			inverseInertia = (2.0f/5.0f) * inverseMass / ((box.halfSize.x * box.halfSize.x + box.halfSize.y * box.halfSize.y));
 			break;
 		case CircleShape:
 			inverseInertia = 0.5 * inverseMass / (circle.radius * circle.radius);

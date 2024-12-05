@@ -50,15 +50,20 @@ namespace quickdraw {
 
 	void drawBoxRigidbody(const Rigidbody& rb)
 	{
-		SDL_FPoint points[5];
-		Matrix3 transRota = Matrix3::transRota(rb.transform);
-		points[0] = transRota * rb.box.halfSize;
-		points[1] = transRota * Vec2(rb.box.halfSize.x, -rb.box.halfSize.y);
-		points[2] = transRota * -rb.box.halfSize;
-		points[3] = transRota * Vec2(-rb.box.halfSize.x, rb.box.halfSize.y);
+		Vec2 points[5];
+		
+		points[0] = rb.transform.rotate(rb.box.halfSize); //RU
+		points[1] = rb.box.halfSize; //RD
+		points[1].y = -rb.box.halfSize.y;
+		points[1] = rb.transform.rotate(points[1]);
+
+		points[3] = -points[1] + rb.transform.position; //LU
+		points[2] = -points[0] + rb.transform.position; //LD
+		points[0] += rb.transform.position;
+		points[1] += rb.transform.position;
 		points[4] = points[0];
 
-		SDL_RenderLines(sdl_renderer, points, 5);
+		SDL_RenderLines(sdl_renderer, reinterpret_cast<SDL_FPoint*>(points), 5);
 	};
 
 	export void drawCircle(float radius, const Vec2& pos, float rotation, int pointNumber = 16)

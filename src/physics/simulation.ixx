@@ -15,8 +15,6 @@ import :rigidbody;
 import :quickRenderer;
 import :globals;
 
-static const float epsilon = 0.0001;
-
 export struct CollisionPair
 {
 	Rigidbody* first;
@@ -28,7 +26,7 @@ export struct CollisionPair
 export class Simulation
 {
 private:
-	float fixedDeltaTime = 1.0 / 120.0; // tic
+	float fixedDeltaTime = 1.0 / 200.0; // tic
 	float timeSinceLastUpdate = 0;
 	unsigned int idCount = 0;
 	std::unordered_map<int, Rigidbody> bodies; //bodies stored in this
@@ -112,6 +110,68 @@ private:
 		boxBoxCollisions();
 	};
 
+	void computeContactResponse(const Contact& shortest, const CollisionPair& pair)
+	{
+		//Collision velocity
+			// 
+			//Compute linear velocity of both bodies at position
+		float elasticity = pair.first->material.elasticity * pair.second->material.elasticity;
+		float friction = pair.first->material.friction * pair.second->material.friction;
+		float pairInverseMass = (pair.first->inverseMass + pair.second->inverseMass);
+
+		Vec2 normal = shortest.direction;
+		Vec2 diff1 = shortest.point - pair.first->transform.position;
+		Vec2 diff2 = shortest.point - pair.second->transform.position;
+
+		Vec2 ang1 = pair.first->angularVelocityVector(diff1);
+		Vec2 ang2 = pair.second->angularVelocityVector(diff2);
+		Vec2 vel1 = pair.first->linearVelocity + ang1;
+		Vec2 vel2 = pair.second->linearVelocity + ang2;
+		Vec2 pairVelocity = vel1 - vel2;
+		float impulse = -(1 + elasticity) * pairVelocity.dot(normal) / pairInverseMass;
+		Vec2 vectorImpulse = normal * impulse ;
+
+		if (simulate)
+		{
+			pair.first->addImpulseAtPos(vectorImpulse, shortest.point);
+			pair.second->addImpulseAtPos(-vectorImpulse, shortest.point);
+
+			ang1 = pair.first->angularVelocityVector(diff1);
+			ang2 = pair.second->angularVelocityVector(diff2);
+			vel1 = pair.first->linearVelocity + ang1;
+			vel2 = pair.second->linearVelocity + ang2;
+			pairVelocity = vel1 - vel2;
+
+			Vec2 tangentVelo = (pairVelocity - normal.dot(pairVelocity));
+			float tangentSize = tangentVelo.length();
+			if (tangentSize > FLT_EPSILON)
+			{
+				Vec2 frictionAccel = tangentVelo / tangentSize * friction * fixedDeltaTime;
+				//if longer than tangent velocity, set impulse friction to -tangent
+				if (frictionAccel.dot(tangentVelo / tangentSize) < -tangentSize)
+					frictionAccel = -tangentVelo;
+
+				if (!pair.first->isKinematic())
+					pair.first->addImpulseAtPos(-frictionAccel / pair.first->inverseMass, shortest.point);
+				if (!pair.second->isKinematic())
+					pair.second->addImpulseAtPos(frictionAccel / pair.second->inverseMass, shortest.point);
+			}
+
+			//Depenetration
+			float inverseMassRatio1 = pair.first->inverseMass / pairInverseMass;
+			float inverseMassRatio2 = pair.second->inverseMass / pairInverseMass;
+
+			float depth = shortest.depth + FLT_EPSILON;
+			pair.first->transform.position -= shortest.direction * depth * inverseMassRatio1;
+			pair.second->transform.position += shortest.direction * depth * inverseMassRatio2;
+		}
+
+		//quickdraw::drawLineTime(shortest.point, shortest.point + shortest.direction * shortest.depth * 10, 1);
+
+		//quickdraw::drawLine(shortest.point, shortest.point + shortest.direction * shortest.depth);
+		std::print("\nCollision occured : {0}", shortest.depth);
+	}
+
 	void computeCollisionResponse()
 	{
 		for (CollisionPair pair : overlapingPairs)
@@ -122,76 +182,29 @@ private:
 
 			Contact shortest;
 			shortest.depth = FLT_MAX;
-			for (Contact c : pair.contacts)
+			for (Contact& c : pair.contacts)
 			{
 				if (c.depth < 0)
 				{
 					c.depth *= -1.0f;
 					c.direction *= -1.0f;
 				}
+
+				//equality average both contacts into one
+				if (c.depth < shortest.depth + FLT_SMALL && c.depth > shortest.depth - FLT_SMALL)
+				{
+					shortest = Contact::Average(c, shortest);
+					continue;
+				}
+
+				//shorter just set it to new value
 				if (c.depth < shortest.depth)
 				{
 					shortest = c;
 				}
 			}
-			//Collision velocity
-			// 
-			//Compute linear velocity of both bodies at position
-			float elasticity = pair.first->material.elasticity * pair.second->material.elasticity;
-			float friction = pair.first->material.friction * pair.second->material.friction;
-			float pairInverseMass = (pair.first->inverseMass + pair.second->inverseMass);
-
-			Vec2 normal = shortest.direction;
-			Vec2 diff1 = shortest.point - pair.first->transform.position;
-			Vec2 diff2 = shortest.point - pair.second->transform.position;
-
-			Vec2 ang1 = pair.first->angularVelocityVector(diff1);
-			Vec2 ang2 = pair.second->angularVelocityVector(diff2);
-			Vec2 vel1 = pair.first->linearVelocity + ang1;
-			Vec2 vel2 = pair.second->linearVelocity + ang2;
-			Vec2 pairVelocity = vel1 - vel2;
-			float impulse = -(1 + elasticity) * pairVelocity.dot(normal) / (pair.first->inverseMass + pair.second->inverseMass);
-			Vec2 vectorImpulse = normal * impulse;
-
-			if (simulate)
-			{
-				pair.first->addImpulseAtPos(vectorImpulse, shortest.point);
-				pair.second->addImpulseAtPos(-vectorImpulse, shortest.point);
-
-				ang1 = pair.first->angularVelocityVector(diff1);
-				ang2 = pair.second->angularVelocityVector(diff2);
-				vel1 = pair.first->linearVelocity + ang1;
-				vel2 = pair.second->linearVelocity + ang2;
-				pairVelocity = vel1 - vel2;
-				
-				Vec2 tangentVelo = (pairVelocity - normal.dot(pairVelocity));
-				float tangentSize = tangentVelo.length();
-				if (tangentSize > FLT_EPSILON)
-				{
-					Vec2 frictionAccel = tangentVelo / tangentSize * friction * fixedDeltaTime;
-					//if longer than tangent velocity, set impulse friction to -tangent
-					if (frictionAccel.dot(tangentVelo / tangentSize) < -tangentSize)
-						frictionAccel = -tangentVelo;
-
-					if (!pair.first->isKinematic())
-						pair.first->addImpulseAtPos(-frictionAccel / pair.first->inverseMass, shortest.point);
-					if (!pair.second->isKinematic())
-						pair.second->addImpulseAtPos(frictionAccel / pair.second->inverseMass, shortest.point);
-
-					quickdraw::drawLineTime(shortest.point, shortest.point + frictionAccel, 1);
-				}
-
-				//Depenetration
-				float inverseMassRatio1 = pair.first->inverseMass / pairInverseMass;
-				float inverseMassRatio2 = pair.second->inverseMass / pairInverseMass;
-
-				shortest.depth += epsilon;
-				pair.first->transform.position -= shortest.direction * shortest.depth * inverseMassRatio1;
-				pair.second->transform.position += shortest.direction * shortest.depth * inverseMassRatio2;
-			}
-
-			//quickdraw::drawLine(shortest.point, shortest.point + shortest.direction * shortest.depth);
-			std::print("\nCollision occured : {0}", shortest.depth);
+			
+			computeContactResponse(shortest, pair);
 		}
 	};
 #pragma endregion

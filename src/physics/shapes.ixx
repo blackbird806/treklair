@@ -15,6 +15,15 @@ export struct Contact
 	float depth;
 	Vec2 direction;
 	Vec2 point;
+
+	static Contact Average(const Contact& a, const Contact& b)
+	{
+		Contact c;
+		c.depth = (a.depth + b.depth) / 2.0f;
+		c.direction = (a.direction + b.direction).getNormalized();
+		c.point = a.point + ((b.point - a.point) / 2.0f);
+		return c;
+	}
 };
 
 export enum ShapeType
@@ -197,13 +206,13 @@ int projectCornerOnAxis(Vec2 axis, Vec2 corners[4], float halfSize, float& depth
 		if (std::abs(bProjs[i] - bMinProj) <= epsilon)
 		{
 			minProjIndex[1] = i;
-			int minContactCount = 2;
+			minContactCount = 2;
 			exAequo = true;
 		}
 		if (std::abs(bProjs[i] - bMaxProj) <= epsilon)
 		{
 			maxProjIndex[1] = i;
-			int maxContactCount = 2;
+			maxContactCount = 2;
 			exAequo = true;
 		}
 
@@ -245,7 +254,7 @@ int projectCornerOnAxis(Vec2 axis, Vec2 corners[4], float halfSize, float& depth
 	if (bMinProj < -halfSize && bMaxProj > halfSize)
 	{
 		float minProjDif = -bMinProj - halfSize;
-		float maxProjDif = bMaxProj + halfSize; // jsuis un génie ???
+		float maxProjDif = bMaxProj + halfSize; 
 		if (-minProjDif > maxProjDif)
 		{
 			//min proj shortest
@@ -281,29 +290,46 @@ bool boxSAT(const Box& a, const Box& b, const Transform& aT, const Transform& bT
 	bCorners[1].y = -b.halfSize.y;
 	bCorners[1] = bT.rotate(bCorners[1]);
 
-	bCorners[2] = -bCorners[1] + bRa; //LU
-	bCorners[3] = -bCorners[0] + bRa; //LD
+	bCorners[3] = -bCorners[1] + bRa; //LU
+	bCorners[2] = -bCorners[0] + bRa; //LD
 	bCorners[0] += bRa;
 	bCorners[1] += bRa;
 
 	//Project corners on axes
 	float depth;
+	std::vector<int> collidingCornerIndices;
 	int cornerContactIndex[2];
 	for (int i = 0; i < 2; i++)
 	{
-		int contactCount = projectCornerOnAxis(axes[i], bCorners, a.halfSize[i], depth, cornerContactIndex, 0.01f);
+		int contactCount = projectCornerOnAxis(axes[i], bCorners, a.halfSize[i], depth, cornerContactIndex, FLT_SMALL);
 		if (contactCount == 0)
 			return false;
 
 		for (int j = 0; j < contactCount; j++)
 		{
-			Contact contact = Contact();
-			contact.point = translate * bCorners[cornerContactIndex[j]];
-			contact.depth = depth * contactDirScale;
-			contact.direction = axes[i] ;
-			contacts.push_back(contact);
+			if (i == 0)
+			{
+				collidingCornerIndices.push_back(cornerContactIndex[j]);
+			}
+			else
+			{
+				for (int k = 0; k < collidingCornerIndices.size(); k++)
+				{
+					if (collidingCornerIndices[k] == cornerContactIndex[j])
+					{
+						Contact contact = Contact();
+						contact.point = translate * bCorners[cornerContactIndex[j]];
+						//contact.point = translate * Vec2::clamp(bCorners[cornerContactIndex[j]], -a.halfSize, a.halfSize);
+						contact.depth = depth * contactDirScale;
+						contact.direction = axes[i];
+						contacts.push_back(contact);
+					}
+				}
+			}
 		}
 	}
+
+
 	return true;
 };
 

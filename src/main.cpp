@@ -46,21 +46,21 @@ int main(int argc, char** argv)
 
 	Simulation simulation;
 
-	Rigidbody base = Rigidbody(Box({ 1000,50 }));
+	Rigidbody base = Rigidbody(Box({ 400,50 }));
 	base.transform.position = { 500, 650 };
 	base.inverseMass = 0;
 	base.transform.rotation = 0;
 	simulation.createRigidbody(base);
 	base.transform.position = { 500, 50 };
-	simulation.createRigidbody(base);
+	//simulation.createRigidbody(base);
 
 	Rigidbody side = Rigidbody(Box({50,800}));
 	side.transform.position = { 50, 0};
 	side.inverseMass = 0;
 	side.transform.rotation = 0;
-	simulation.createRigidbody(side);
+	//simulation.createRigidbody(side);
 	side.transform.position = {1050, 0};
-	simulation.createRigidbody(side);
+	//simulation.createRigidbody(side);
 
 	Rigidbody box = Rigidbody(Box({ 100, 25 }));
 	Rigidbody circle = Rigidbody(Circle({ 25 }));
