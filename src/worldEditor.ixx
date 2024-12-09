@@ -19,8 +19,16 @@ public:
 	Camera  camera;
 	int worldTargetWidth, worldTargetHeight;
 
+	bool open = true;
+	bool displayGrid = true;
+	bool displayGismo = true;
+
+	World* world = nullptr;
+	bool worldDirty = true;
+
 	WorldEditor()
 	{
+		world = new World(20, 20);
 		worldTargetWidth = gameSizeX;
 		worldTargetHeight = gameSizeY;
 		worldTarget = SDL_CreateTexture(sdl_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, worldTargetWidth, worldTargetHeight);
@@ -32,12 +40,6 @@ public:
 		SDL_DestroyTexture(worldTarget);
 	}
 
-	bool open = true;
-	bool displayGrid = true;
-	bool displayGismo = true;
-
-	World* world = nullptr;
-	bool worldDirty = true;
 
 	void drawWorld()
 	{
@@ -89,6 +91,7 @@ public:
 		ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
 		ImVec2 p = ImGui::GetCursorScreenPos();
+		// @TODO increasing the canvas scale should not scale the texture but the viewport instead
 		ImGui::Image((ImTextureID)(intptr_t)worldTarget, canvas_sz);
 		
 		if (displayGrid)
@@ -110,16 +113,22 @@ public:
 				int const y = i * gridSizeY;
 				draw_list->AddLine(ImVec2(canvas_p0.x, canvas_p0.y + y), ImVec2(canvas_p1.x, canvas_p0.y + y), IM_COL32(200, 200, 200, 40));
 			}
-
 		}
 
 		ImGuiIO& io = ImGui::GetIO();
 
-		if (displayGismo)
+		if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
 		{
-			if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+			int const mx = io.MousePos.x - p.x;
+			int const my = io.MousePos.y - p.y;
+
+			// only detect clicks in the viewport
+			if (mx > 0 && my > 0 && mx < canvas_sz.x && my < canvas_sz.y)
 			{
-				std::print("click\n");
+				std::print("{} {}\n", mx, my);
+				int const selected_tile_x = mx / tile_size;
+				int const selected_tile_y = my / tile_size;
+				world->tiles[selected_tile_x + selected_tile_y * world->size_x] = { TileType::DebugWall };
 			}
 		}
 

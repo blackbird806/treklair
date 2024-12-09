@@ -159,7 +159,7 @@ int main(int argc, char** argv)
 		//gameRenderer.drawGame(world);
 
 		//SDL_SetRenderLogicalPresentation(sdl_renderer, gameSizeX, gameSizeY, SDL_LOGICAL_PRESENTATION_LETTERBOX);
-		//SDL_SetRenderTarget(sdl_renderer, gameRenderer.mainRenderTarget);
+		SDL_SetRenderTarget(sdl_renderer, gameRenderer.mainRenderTarget);
 		SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 0, 255);
 		SDL_RenderClear(sdl_renderer);
 
