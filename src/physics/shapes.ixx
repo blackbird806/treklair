@@ -188,7 +188,7 @@ export bool AABBBoxOverlap(const AABB& a, const Box& b, const Transform& aT, con
 
 //Box box contacts
 
-int projectCornerOnAxis(Vec2 axis, Vec2 corners[4], float halfSize, float& depth, int* cornerContactIndex, float epsilon)
+int projectCornerOnAxis(Vec2 axis, Vec2* corners, float halfSize, float& depth, int* cornerContactIndex, int* cornerInsideIndex, int& cornerInsideCount ,float epsilon)
 {
 	float bProjs[4];
 	float bMinProj = FLT_MAX;
@@ -197,11 +197,20 @@ int projectCornerOnAxis(Vec2 axis, Vec2 corners[4], float halfSize, float& depth
 	int maxProjIndex[2];
 	int minContactCount = 1;
 	int maxContactCount = 1;
+	float unsignedDepths[4];
+	cornerInsideCount = 0;
 
 	for (int i = 0; i < 4; i++)
 	{
 		bool exAequo = false;
 		bProjs[i] = axis.dot(corners[i]);
+		unsignedDepths[i] = std::abs(bProjs[i]) - halfSize;
+		if (unsignedDepths[i] <= 0.0f) // negative means inside
+		{
+			cornerInsideIndex[cornerInsideCount] = i;
+			cornerInsideCount++;
+		}
+
 		//Check ex-aequos
 		if (std::abs(bProjs[i] - bMinProj) <= epsilon)
 		{
@@ -296,39 +305,51 @@ bool boxSAT(const Box& a, const Box& b, const Transform& aT, const Transform& bT
 	bCorners[1] += bRa;
 
 	//Project corners on axes
-	float depth;
+	float depthX;
+	float depthY;
 	std::vector<int> collidingCornerIndices;
-	int cornerContactIndex[2];
-	for (int i = 0; i < 2; i++)
-	{
-		int contactCount = projectCornerOnAxis(axes[i], bCorners, a.halfSize[i], depth, cornerContactIndex, FLT_SMALL);
-		if (contactCount == 0)
-			return false;
+	int cornerContactIndexX[2];
+	int cornerContactIndexY[2];
+	int cornerInsideIndexX[4];
+	int cornerInsideIndexY[4];
+	int cornerInsideCountX;
+	int cornerInsideCountY;
+	
+	int contactCountX = projectCornerOnAxis(axes[0], bCorners, a.halfSize.x, depthX, cornerContactIndexX, cornerInsideIndexX, cornerInsideCountX, FLT_SMALL);
+	if (contactCountX == 0)
+		return false;
 
-		for (int j = 0; j < contactCount; j++)
+	int contactCountY = projectCornerOnAxis(axes[1], bCorners, a.halfSize.y, depthY, cornerContactIndexY, cornerInsideIndexY, cornerInsideCountY, FLT_SMALL);
+	if (contactCountY == 0)
+		return false;
+
+
+	//search if X shortest corner are inside Y axis and vice versa to securise that colliding corners are inside the box
+	for (int j = 0; j < contactCountX; j++)
+		for (int k = 0; k < cornerInsideCountY; k++)
 		{
-			if (i == 0)
+			if (cornerContactIndexX[j] == cornerInsideIndexY[k])
 			{
-				collidingCornerIndices.push_back(cornerContactIndex[j]);
-			}
-			else
-			{
-				for (int k = 0; k < collidingCornerIndices.size(); k++)
-				{
-					if (collidingCornerIndices[k] == cornerContactIndex[j])
-					{
-						Contact contact = Contact();
-						contact.point = translate * bCorners[cornerContactIndex[j]];
-						//contact.point = translate * Vec2::clamp(bCorners[cornerContactIndex[j]], -a.halfSize, a.halfSize);
-						contact.depth = depth * contactDirScale;
-						contact.direction = axes[i];
-						contacts.push_back(contact);
-					}
-				}
+				Contact contact = Contact();
+				contact.point = translate * bCorners[cornerContactIndexX[j]];
+				contact.depth = depthX * contactDirScale;
+				contact.direction = axes[0];
+				contacts.push_back(contact);
 			}
 		}
-	}
-
+	
+	for (int j = 0; j < contactCountY; j++)
+		for (int k = 0; k < cornerInsideCountX; k++)
+		{
+			if (cornerContactIndexY[j] == cornerInsideIndexX[k])
+			{
+				Contact contact = Contact();
+				contact.point = translate * bCorners[cornerContactIndexY[j]];
+				contact.depth = depthY * contactDirScale;
+				contact.direction = axes[1];
+				contacts.push_back(contact);
+			}
+		}
 
 	return true;
 };
@@ -338,8 +359,7 @@ export bool computeBoxContacts(const Box& a, const Box& b, const Transform& aT, 
 	//Bounding sphere distance check for quick check opti
 	//if ((a.halfSize.sqrLength() + b.halfSize.sqrLength()) < (bT.position - aT.position).sqrLength())
 		//return false;
-
-	return boxSAT(a, b, aT, bT, contacts) && boxSAT(b, a, bT, aT, contacts, -1.0f);
+	return  boxSAT(a, b, aT, bT, contacts) && boxSAT(b, a, bT, aT, contacts, -1.0f);
 };
 
 //Circle contacts

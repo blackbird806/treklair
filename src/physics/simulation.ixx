@@ -166,9 +166,7 @@ private:
 			pair.second->transform.position += shortest.direction * depth * inverseMassRatio2;
 		}
 
-		//quickdraw::drawLineTime(shortest.point, shortest.point + shortest.direction * shortest.depth * 10, 1);
 
-		//quickdraw::drawLine(shortest.point, shortest.point + shortest.direction * shortest.depth);
 		std::print("\nCollision occured : {0}", shortest.depth);
 	}
 
@@ -182,8 +180,10 @@ private:
 
 			Contact shortest;
 			shortest.depth = FLT_MAX;
+			int i = 0;
 			for (Contact& c : pair.contacts)
 			{
+
 				if (c.depth < 0)
 				{
 					c.depth *= -1.0f;
@@ -204,6 +204,7 @@ private:
 				}
 			}
 			
+			quickdraw::drawLineTime(shortest.point, shortest.point + shortest.direction * shortest.depth * 10, 1);
 			computeContactResponse(shortest, pair);
 		}
 	};
