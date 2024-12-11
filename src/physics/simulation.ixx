@@ -135,27 +135,32 @@ private:
 		{
 			pair.first->addImpulseAtPos(vectorImpulse, shortest.point);
 			pair.second->addImpulseAtPos(-vectorImpulse, shortest.point);
-
+			
 			ang1 = pair.first->angularVelocityVector(diff1);
 			ang2 = pair.second->angularVelocityVector(diff2);
 			vel1 = pair.first->linearVelocity + ang1;
 			vel2 = pair.second->linearVelocity + ang2;
 			pairVelocity = vel1 - vel2;
-
-			Vec2 tangentVelo = (pairVelocity - normal.dot(pairVelocity));
-			float tangentSize = tangentVelo.length();
-			if (tangentSize > FLT_EPSILON)
+			
+			Vec2 tangentVelo = (pairVelocity - normal.tengent().dot(pairVelocity));
+			float tangentSizeSqr = tangentVelo.sqrLength();
+			float deltaFriction = friction * fixedDeltaTime;
+			Vec2 frictionAccel;
+			//if longer than tangent velocity, set impulse friction to -tangent
+			if (tangentSizeSqr <= deltaFriction * deltaFriction) 
 			{
-				Vec2 frictionAccel = tangentVelo / tangentSize * friction * fixedDeltaTime;
-				//if longer than tangent velocity, set impulse friction to -tangent
-				if (frictionAccel.dot(tangentVelo / tangentSize) < -tangentSize)
-					frictionAccel = -tangentVelo;
-
-				if (!pair.first->isKinematic())
-					pair.first->addImpulseAtPos(-frictionAccel / pair.first->inverseMass, shortest.point);
-				if (!pair.second->isKinematic())
-					pair.second->addImpulseAtPos(frictionAccel / pair.second->inverseMass, shortest.point);
+				frictionAccel = -tangentVelo;
 			}
+			else
+			{
+				frictionAccel = tangentVelo / sqrt(tangentSizeSqr) * friction * fixedDeltaTime;
+			}
+
+			if (!pair.first->isKinematic())
+				pair.first->addImpulseAtPos(-frictionAccel / pair.first->inverseMass, shortest.point);
+			if (!pair.second->isKinematic())
+				pair.second->addImpulseAtPos(frictionAccel / pair.second->inverseMass, shortest.point);
+
 
 			//Depenetration
 			float inverseMassRatio1 = pair.first->inverseMass / pairInverseMass;
@@ -165,7 +170,6 @@ private:
 			pair.first->transform.position -= shortest.direction * depth * inverseMassRatio1;
 			pair.second->transform.position += shortest.direction * depth * inverseMassRatio2;
 		}
-
 
 		std::print("\nCollision occured : {0}", shortest.depth);
 	}

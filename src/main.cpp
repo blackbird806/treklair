@@ -58,13 +58,13 @@ int main(int argc, char** argv)
 	side.transform.position = { 50, 0};
 	side.inverseMass = 0;
 	side.transform.rotation = 0;
-	//simulation.createRigidbody(side);
-	side.transform.position = {1050, 0};
-	//simulation.createRigidbody(side);
+	simulation.createRigidbody(side);
+	side.transform.position = { 950, 0 };
+	simulation.createRigidbody(side);
 
-	Rigidbody box = Rigidbody(Box({ 100, 25 }));
+	Rigidbody rect = Rigidbody(Box({ 200, 10 }));
 	Rigidbody circle = Rigidbody(Circle({ 25 }));
-	//circle.angularVelocity = 10;
+	Rigidbody square = Rigidbody(Box({ 25, 25 }));
 	std::vector<Rigidbody*> createdBodies;
 	
 	std::print("hello {}", "world");
@@ -139,9 +139,10 @@ int main(int argc, char** argv)
 		mousePos -= Vec2(100, 0);
 		engineRenderer.startFrame();
 
-		if (input_map_pressed[SDLK_C] || input_map_pressed[SDLK_B])
+		if (input_map_pressed[SDLK_C] || input_map_pressed[SDLK_B] || input_map_pressed[SDLK_V])
 		{
-			Rigidbody rb = input_map_pressed[SDLK_C] ? circle : box;
+			
+			Rigidbody rb = input_map_pressed[SDLK_C] ? circle : input_map_pressed[SDLK_B] ? rect : square;
 			rb.transform.position = mousePos;
 			rb.transform.rotation = 0;
 			createdBodies.push_back(simulation.createRigidbody(rb));
