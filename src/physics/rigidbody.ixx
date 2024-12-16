@@ -1,6 +1,7 @@
 ﻿module;
 #define _USE_MATH_DEFINES
-#include <cmath>
+import <cmath>;
+import <cfloat>;
 
 export module treklair:rigidbody;
 import :shapes;
@@ -12,10 +13,10 @@ import :matrix3;
 struct PhysicsMaterial
 {
 	float elasticity = 0;
-	float friction = 10;
+	float friction = 3.0f;
 };
 
-export class Rigidbody
+export struct Rigidbody
 {
 public:
 	union
@@ -31,6 +32,7 @@ public:
 	Transform transform;
 
 	Vec2 linearVelocity;
+	Vec2 depenetrationVelocity;
 
 	//In radiants
 	float angularVelocity;
@@ -153,7 +155,6 @@ public:
 		return inverseMass == 0;
 	}
 
-
 	void updateNoCCD(float deltaTime)
 	{
 		transform.position += linearVelocity * deltaTime;
@@ -173,7 +174,8 @@ public:
 			//TO DO: Calculate estimated velocities with last transformations
 			return;
 		}
-		linearVelocity += gravity * gravityScale * deltaTime;
+		linearVelocity += (depenetrationVelocity + gravity * gravityScale) * deltaTime;
+		depenetrationVelocity = Vec2::Zero;
 		updateNoCCD(deltaTime);
 	};
 
@@ -193,11 +195,20 @@ public:
 	{
 		Vec2 diff = position - transform.position;
 		float angularImpact = diff.cross(impulse);
-		float torque = angularImpact * inverseInertia;
+		float torque = angularImpact * inverseInertia ;
 		Vec2 accel = impulse * inverseMass;
 		linearVelocity += (accel);
 		angularVelocity += (torque);
 	};
+
+	void addImpulseAtPosLocal(Vec2 impulse, Vec2 position)
+	{
+		float angularImpact = position.cross(impulse);
+		float torque = angularImpact * inverseInertia;
+		Vec2 accel = impulse * inverseMass;
+		linearVelocity += (accel);
+		angularVelocity += (torque);
+	}
 
 	Vec2 velocityAtPos(Vec2 position)
 	{
@@ -219,6 +230,6 @@ public:
 
 	Vec2 angularVelocityVector(Vec2 localPosition)
 	{
-		return -localPosition.tengent() * (angularVelocity);
+		return localPosition.tengent() * (-angularVelocity);
 	}
 };

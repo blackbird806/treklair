@@ -86,7 +86,6 @@ export bool circleOverlap(const Circle& a, const Circle& b, const Transform& aT,
 	return (sqrDist <= radiusSum * radiusSum);
 };
 
-
 export bool AABBCircleOverlap(const AABB& a, const Circle& b, const Vec2& pT)
 {
 	Vec2 centerAABB = Center(a);
@@ -322,7 +321,6 @@ bool boxSAT(const Box& a, const Box& b, const Transform& aT, const Transform& bT
 	int contactCountY = projectCornerOnAxis(axes[1], bCorners, a.halfSize.y, depthY, cornerContactIndexY, cornerInsideIndexY, cornerInsideCountY, FLT_SMALL);
 	if (contactCountY == 0)
 		return false;
-
 
 	//search if X shortest corner are inside Y axis and vice versa to securise that colliding corners are inside the box
 	for (int j = 0; j < contactCountX; j++)

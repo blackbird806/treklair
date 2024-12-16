@@ -54,12 +54,12 @@ int main(int argc, char** argv)
 	base.transform.position = { 500, 50 };
 	//simulation.createRigidbody(base);
 
-	Rigidbody side = Rigidbody(Box({50,800}));
-	side.transform.position = { 50, 0};
+	Rigidbody side = Rigidbody(Box({50,200}));
+	side.transform.position = { 50, 500};
 	side.inverseMass = 0;
 	side.transform.rotation = 0;
 	simulation.createRigidbody(side);
-	side.transform.position = { 950, 0 };
+	side.transform.position = { 950, 500 };
 	simulation.createRigidbody(side);
 
 	Rigidbody rect = Rigidbody(Box({ 200, 10 }));
@@ -144,7 +144,6 @@ int main(int argc, char** argv)
 			
 			Rigidbody rb = input_map_pressed[SDLK_C] ? circle : input_map_pressed[SDLK_B] ? rect : square;
 			rb.transform.position = mousePos;
-			rb.transform.rotation = 0;
 			createdBodies.push_back(simulation.createRigidbody(rb));
 		}
 
@@ -184,7 +183,6 @@ int main(int argc, char** argv)
 			SDL_SetRenderLogicalPresentation(sdl_renderer, w, h, SDL_LOGICAL_PRESENTATION_DISABLED);
 			SDL_RenderTexture(sdl_renderer, renderTarget, nullptr, nullptr);
 		}
-
 
 		SDL_SetRenderDrawColor(sdl_renderer, 255, 0, 0, 255);
 		quickdraw::updateDebugDraw(deltaTime);

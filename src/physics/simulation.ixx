@@ -9,7 +9,6 @@ import <string>;
 import <cstdint>;
 import <unordered_map>;
 
-
 import :shapes;
 import :rigidbody;
 import :quickRenderer;
@@ -26,7 +25,7 @@ export struct CollisionPair
 export class Simulation
 {
 private:
-	float fixedDeltaTime = 1.0 / 200.0; // tic
+	float fixedDeltaTime = 1.0 / 60.0; // tic
 	float timeSinceLastUpdate = 0;
 	unsigned int idCount = 0;
 	std::unordered_map<int, Rigidbody> bodies; //bodies stored in this
@@ -64,7 +63,6 @@ private:
 		sorted_bodies.clear();
 		for (auto& body : bodies)
 			sorted_bodies.push_back(&body.second);
-
 
 		for (int i = 0; i < sorted_bodies.size(); i++)
 		{
@@ -110,7 +108,7 @@ private:
 		boxBoxCollisions();
 	};
 
-	void computeContactResponse(const Contact& shortest, const CollisionPair& pair)
+	void computeContactResponse(const Contact& shortest, const CollisionPair& pair, float deltaTime)
 	{
 		//Collision velocity
 			// 
@@ -133,48 +131,42 @@ private:
 
 		if (simulate)
 		{
-			pair.first->addImpulseAtPos(vectorImpulse, shortest.point);
-			pair.second->addImpulseAtPos(-vectorImpulse, shortest.point);
-			
-			ang1 = pair.first->angularVelocityVector(diff1);
-			ang2 = pair.second->angularVelocityVector(diff2);
-			vel1 = pair.first->linearVelocity + ang1;
-			vel2 = pair.second->linearVelocity + ang2;
-			pairVelocity = vel1 - vel2;
-			
-			Vec2 tangentVelo = (pairVelocity - normal.tengent().dot(pairVelocity));
-			float tangentSizeSqr = tangentVelo.sqrLength();
-			float deltaFriction = friction * fixedDeltaTime;
-			Vec2 frictionAccel;
-			//if longer than tangent velocity, set impulse friction to -tangent
-			if (tangentSizeSqr <= deltaFriction * deltaFriction) 
-			{
-				frictionAccel = -tangentVelo;
-			}
-			else
-			{
-				frictionAccel = tangentVelo / sqrt(tangentSizeSqr) * friction * fixedDeltaTime;
-			}
-
-			if (!pair.first->isKinematic())
-				pair.first->addImpulseAtPos(-frictionAccel / pair.first->inverseMass, shortest.point);
-			if (!pair.second->isKinematic())
-				pair.second->addImpulseAtPos(frictionAccel / pair.second->inverseMass, shortest.point);
-
-
 			//Depenetration
 			float inverseMassRatio1 = pair.first->inverseMass / pairInverseMass;
 			float inverseMassRatio2 = pair.second->inverseMass / pairInverseMass;
 
 			float depth = shortest.depth + FLT_EPSILON;
-			pair.first->transform.position -= shortest.direction * depth * inverseMassRatio1;
-			pair.second->transform.position += shortest.direction * depth * inverseMassRatio2;
-		}
+			
+			//translate solution
+			//pair.first->transform.position -= shortest.direction * depth * inverseMassRatio1;
+			//pair.second->transform.position += shortest.direction * depth * inverseMassRatio2;
+			
+			//velocity solution
+			Vec2 depenetrationFirst;
+			Vec2 depenetrationSecond;
+			if (!pair.first->isKinematic())
+			{
+				depenetrationFirst = normal * -std::min(depth * inverseMassRatio1 * depenetrationForce * deltaTime / pair.first->inverseMass, depenatrationMaxForce * pair.first->inverseMass);
+			}
+			if (!pair.second->isKinematic())
+			{
+				depenetrationSecond = normal * std::min(depth * inverseMassRatio2 * depenetrationForce * deltaTime / pair.second->inverseMass, depenatrationMaxForce * pair.second->inverseMass);
+			}
 
-		std::print("\nCollision occured : {0}", shortest.depth);
+			Vec2 tengent = normal.tengent();
+			Vec2 tangentVelo = (tengent * tengent.dot(pairVelocity));
+			Vec2 frictionAccel = tangentVelo * std::min(1.0f, friction * deltaTime);
+
+			//quickdraw::drawLineTime(shortest.point, shortest.point + frictionAccel * 10, 1);
+
+			if (!pair.first->isKinematic())
+				pair.first->addImpulseAtPosLocal(vectorImpulse + depenetrationFirst - (frictionAccel / pair.first->inverseMass), diff1);
+			if (!pair.second->isKinematic())
+				pair.second->addImpulseAtPosLocal(-vectorImpulse + depenetrationSecond + (frictionAccel / pair.second->inverseMass), diff2);
+		}
 	}
 
-	void computeCollisionResponse()
+	void computeCollisionResponse(float deltaTime)
 	{
 		for (CollisionPair pair : overlapingPairs)
 		{
@@ -208,8 +200,7 @@ private:
 				}
 			}
 			
-			quickdraw::drawLineTime(shortest.point, shortest.point + shortest.direction * shortest.depth * 10, 1);
-			computeContactResponse(shortest, pair);
+			computeContactResponse(shortest, pair, deltaTime);
 		}
 	};
 #pragma endregion
@@ -240,7 +231,7 @@ public:
 		computeCollisions();
 
 		//Collision response
-		computeCollisionResponse();
+		computeCollisionResponse(deltaTime);
 	}
 
 	void update(float deltaTime)

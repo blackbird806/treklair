@@ -8,6 +8,8 @@ export constexpr int gameSizeX = 720;
 export constexpr int gameSizeY = 480;
 export constexpr float gameAspectRatio = (float)gameSizeX / gameSizeY;
 
+export constexpr float depenetrationForce = 1000.0f;
+export constexpr float depenatrationMaxForce = 500.0f;
 export constexpr Vec2 gravity = {0, 1000 };
 
 export struct SDL_Window* sdl_window;
