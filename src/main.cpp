@@ -66,6 +66,8 @@ int main(int argc, char** argv)
 	Rigidbody circle = Rigidbody(Circle({ 25 }));
 	Rigidbody square = Rigidbody(Box({ 25, 25 }));
 	std::vector<Rigidbody*> createdBodies;
+
+	DistanceContraint distanceConstraint = DistanceContraint(nullptr, nullptr, 100, 200, 5000 );
 	
 	std::print("hello {}", "world");
 
@@ -88,7 +90,6 @@ int main(int argc, char** argv)
 	EngineRenderer engineRenderer;
 	engineRenderer.initImgui();
 	bool done = false;
-
 	
 	Vec2 mousePos;
 	bool keyPressed;
@@ -141,10 +142,19 @@ int main(int argc, char** argv)
 
 		if (input_map_pressed[SDLK_C] || input_map_pressed[SDLK_B] || input_map_pressed[SDLK_V])
 		{
-			
 			Rigidbody rb = input_map_pressed[SDLK_C] ? circle : input_map_pressed[SDLK_B] ? rect : square;
 			rb.transform.position = mousePos;
 			createdBodies.push_back(simulation.createRigidbody(rb));
+			if (createdBodies.size() % 3 == 0)
+			{
+				distanceConstraint.firstBody = createdBodies.back();
+				distanceConstraint.secondBody = createdBodies[createdBodies.size() - 2];
+				simulation.createDistanceConstraint(distanceConstraint);
+				distanceConstraint.secondBody = createdBodies[createdBodies.size() - 3];
+				simulation.createDistanceConstraint(distanceConstraint);
+				distanceConstraint.firstBody = createdBodies[createdBodies.size() - 2];
+				simulation.createDistanceConstraint(distanceConstraint);
+			}
 		}
 
 		if (input_map_pressed[SDLK_F1])
@@ -158,6 +168,7 @@ int main(int argc, char** argv)
 		{
 			simulation.removeRigidbodies(createdBodies);
 			createdBodies.clear();
+			simulation.clearConstraints();
 		}
 
 		if (input_map_pressed[SDLK_F9])
@@ -189,6 +200,8 @@ int main(int argc, char** argv)
 
 		SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 255, 255);
 		simulation.debugDrawRigidbodies();
+		SDL_SetRenderDrawColor(sdl_renderer, 0, 255, 0, 255);
+		simulation.debugDrawConstraints();
 
 		SDL_SetRenderDrawColor(sdl_renderer, 255, 0, 0, 255);
 		simulation.update(deltaTime * timeDilation);

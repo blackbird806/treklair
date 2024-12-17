@@ -204,7 +204,7 @@ int projectCornerOnAxis(Vec2 axis, Vec2* corners, float halfSize, float& depth, 
 		bool exAequo = false;
 		bProjs[i] = axis.dot(corners[i]);
 		unsignedDepths[i] = std::abs(bProjs[i]) - halfSize;
-		if (unsignedDepths[i] <= 0.0f) // negative means inside
+		if (unsignedDepths[i] <= FLT_EPSILON) // negative means inside
 		{
 			cornerInsideIndex[cornerInsideCount] = i;
 			cornerInsideCount++;
@@ -245,6 +245,8 @@ int projectCornerOnAxis(Vec2 axis, Vec2* corners, float halfSize, float& depth, 
 	//SDL_RenderLine(sdl_renderer, 500 + axis.x * bMinProj, 500 + axis.y * bMinProj, 500 + axis.x * bMaxProj, 500 + axis.y * bMaxProj);
 	//SDL_RenderLine(sdl_renderer, 500 + axis.x * -halfSize, 500 + axis.y * -halfSize, 500 + axis.x * halfSize, 500 + axis.y * halfSize);
 
+	bMinProj -= FLT_EPSILON;
+	bMaxProj += FLT_EPSILON;
 	if (bMinProj > -halfSize && bMinProj < halfSize)
 	{
 		std::memcpy(cornerContactIndex, minProjIndex, sizeof(minProjIndex));

@@ -12,3 +12,4 @@ export import :transform;
 export import :shapes;
 export import :rigidbody;
 export import :simulation;
+export import :constraints;

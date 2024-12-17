@@ -7,9 +7,11 @@ import <algorithm>;
 import <print>;
 import <string>;
 import <cstdint>;
+import <cmath>;
 import <unordered_map>;
 
 import :shapes;
+import :constraints;
 import :rigidbody;
 import :quickRenderer;
 import :globals;
@@ -25,17 +27,25 @@ export struct CollisionPair
 export class Simulation
 {
 private:
-	float fixedDeltaTime = 1.0 / 60.0; // tic
+	float fixedDeltaTime = 1.0 / 200.0; // tic
 	float timeSinceLastUpdate = 0;
 	unsigned int idCount = 0;
+
+	//Bodies
 	std::unordered_map<int, Rigidbody> bodies; //bodies stored in this
 	std::vector<Rigidbody*> sorted_bodies; //used for sweep and prune sorting
 
+	//Pairs
 	std::vector<CollisionPair> circleCirclePairs;
 	std::vector<CollisionPair> boxCirclePairs;
 	std::vector<CollisionPair> boxBoxPairs;
-
 	std::vector<CollisionPair> overlapingPairs;
+	std::unordered_map<Rigidbody*, std::vector<Rigidbody*>> overlapingBodiesMap;
+	std::unordered_map<Rigidbody*, std::vector<Rigidbody*>> overlapingBodiesMapCache;
+
+	//Constraints
+	std::vector<DistanceContraint> distanceConstraints;
+
 
 	void addPair(Rigidbody* body1, Rigidbody* body2)
 	{
@@ -113,6 +123,18 @@ private:
 		//Collision velocity
 			// 
 			//Compute linear velocity of both bodies at position
+
+		//check if overlapped last frame, only iterate on first needed.
+		bool overlapedLastFrame = false;
+		std::vector<Rigidbody*> overlapingLastFrame = overlapingBodiesMapCache[pair.first];
+		for (int i = 0; i < overlapingLastFrame.size(); i++)
+		{
+			if (overlapingLastFrame[i] == pair.second)
+			{
+				//overlapedLastFrame = true;
+			}
+		}
+
 		float elasticity = pair.first->material.elasticity * pair.second->material.elasticity;
 		float friction = pair.first->material.friction * pair.second->material.friction;
 		float pairInverseMass = (pair.first->inverseMass + pair.second->inverseMass);
@@ -125,9 +147,10 @@ private:
 		Vec2 ang2 = pair.second->angularVelocityVector(diff2);
 		Vec2 vel1 = pair.first->linearVelocity + ang1;
 		Vec2 vel2 = pair.second->linearVelocity + ang2;
-		Vec2 pairVelocity = vel1 - vel2;
-		float impulse = -(1 + elasticity) * pairVelocity.dot(normal) / pairInverseMass;
-		Vec2 vectorImpulse = normal * impulse ;
+		Vec2 pairVelocity = vel1 - vel2; \
+		float dotPairVelocity = pairVelocity.dot(normal);
+		float impulse = -(1 + elasticity) * std::max(0.0f, dotPairVelocity) / pairInverseMass;
+		Vec2 vectorImpulse = normal * impulse;
 
 		if (simulate)
 		{
@@ -135,7 +158,7 @@ private:
 			float inverseMassRatio1 = pair.first->inverseMass / pairInverseMass;
 			float inverseMassRatio2 = pair.second->inverseMass / pairInverseMass;
 
-			float depth = shortest.depth + FLT_EPSILON;
+			float depth = shortest.depth;
 			
 			//translate solution
 			//pair.first->transform.position -= shortest.direction * depth * inverseMassRatio1;
@@ -164,6 +187,9 @@ private:
 			if (!pair.second->isKinematic())
 				pair.second->addImpulseAtPosLocal(-vectorImpulse + depenetrationSecond + (frictionAccel / pair.second->inverseMass), diff2);
 		}
+
+		overlapingBodiesMap[pair.first].push_back(pair.second);
+		overlapingBodiesMap[pair.second].push_back(pair.first);
 	}
 
 	void computeCollisionResponse(float deltaTime)
@@ -217,11 +243,18 @@ public:
 			{
 				body.second.update(deltaTime);
 			}
+
+			for (DistanceContraint& constraint : distanceConstraints)
+			{
+				constraint.update(deltaTime);
+			}
 		}
 
 		circleCirclePairs.clear();
 		boxCirclePairs.clear();
 		boxBoxPairs.clear();
+		overlapingBodiesMapCache = overlapingBodiesMap;
+		overlapingBodiesMap.clear();
 		overlapingPairs.clear();
 
 		//Sweep and prune
@@ -267,6 +300,14 @@ public:
 		return &body;
 	};
 
+	DistanceContraint* createDistanceConstraint(const DistanceContraint& constraint)
+	{
+		distanceConstraints.push_back(constraint);
+		DistanceContraint& inst = distanceConstraints.back();
+
+		return &inst;
+	};
+
 	bool removeRigidbody(Rigidbody* body)
 	{
 		return bodies.erase(body->ID);
@@ -279,11 +320,22 @@ public:
 			removeRigidbody(body);
 		}
 		input.clear();
-	}
+	};
+
+	void clearConstraints()
+	{
+		distanceConstraints.clear();
+	};
 
 	void debugDrawRigidbodies()
 	{
 		for (Rigidbody* body : sorted_bodies)
 			quickdraw::drawRigidbody(*body);
+	};
+
+	void debugDrawConstraints()
+	{
+		for (DistanceContraint& constraint : distanceConstraints)
+			quickdraw::drawLine(constraint.firstBody->transform.position, constraint.secondBody->transform.position);
 	};
 };
