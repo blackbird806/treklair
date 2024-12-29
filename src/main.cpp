@@ -36,6 +36,22 @@ static void setInput(SDL_Keycode key, bool value)
 	}
 };
 
+Gyrosystem gyrosystem;
+
+static void createGyrosystem(Simulation& simulation)
+{
+	Rigidbody wheel = Rigidbody(Circle({ 50 }));
+	Rigidbody body = Rigidbody(Box({ 25, 75 }));
+	wheel.transform.position = { 500, 300 };
+	body.transform.position = wheel.transform.position + Vec2(0, -50);
+	gyrosystem.wheel = simulation.createRigidbody(wheel);
+	gyrosystem.body = simulation.createRigidbody(body);
+	simulation.ignoreBodies(gyrosystem.wheel, gyrosystem.body);
+	gyrosystem.spring = simulation.createDistanceConstraint(DistanceContraint(gyrosystem.wheel, gyrosystem.body, 100, 200, 5000));
+	gyrosystem.init();
+	simulation.addUpdateStruct(Gyrosystem::static_update, &gyrosystem);
+}
+
 int main(int argc, char** argv)
 {
 	std::srand(time(0));
@@ -69,6 +85,8 @@ int main(int argc, char** argv)
 
 	DistanceContraint distanceConstraint = DistanceContraint(nullptr, nullptr, 100, 200, 5000 );
 	
+	createGyrosystem(simulation);
+
 	std::print("hello {}", "world");
 
 	if (!SDL_Init(SDL_INIT_VIDEO))

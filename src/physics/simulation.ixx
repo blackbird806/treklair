@@ -15,6 +15,7 @@ import :constraints;
 import :rigidbody;
 import :quickRenderer;
 import :globals;
+import :gyrosystem;
 
 export struct CollisionPair
 {
@@ -27,7 +28,7 @@ export struct CollisionPair
 export class Simulation
 {
 private:
-	float fixedDeltaTime = 1.0 / 200.0; // tic
+	float fixedDeltaTime = 1.0 / 100.0; // tic
 	float timeSinceLastUpdate = 0;
 	unsigned int idCount = 0;
 
@@ -40,12 +41,25 @@ private:
 	std::vector<CollisionPair> boxCirclePairs;
 	std::vector<CollisionPair> boxBoxPairs;
 	std::vector<CollisionPair> overlapingPairs;
-	std::unordered_map<Rigidbody*, std::vector<Rigidbody*>> overlapingBodiesMap;
-	std::unordered_map<Rigidbody*, std::vector<Rigidbody*>> overlapingBodiesMapCache;
+	std::unordered_map<Rigidbody*, std::vector<Rigidbody*>> ignoringBodies;
+
+	//Magie noire
+	std::vector<void (*)(void*, float)> updates;
+	std::vector<void*> updateStructs;
 
 	//Constraints
 	std::vector<DistanceContraint> distanceConstraints;
 
+	bool checkBodyIgnored(Rigidbody* body1, Rigidbody* body2)
+	{
+		for (Rigidbody* body : ignoringBodies[body1])
+		{
+			if (body == body2)
+				return true;
+		}
+
+		return false;
+	}
 
 	void addPair(Rigidbody* body1, Rigidbody* body2)
 	{
@@ -78,7 +92,8 @@ private:
 		{
 			for (int j = i + 1; j < sorted_bodies.size(); j++)
 			{
-				addPair(sorted_bodies[i], sorted_bodies[j]);
+				if(!checkBodyIgnored(sorted_bodies[i], sorted_bodies[j]))
+					addPair(sorted_bodies[i], sorted_bodies[j]);
 			}
 		}
 	};
@@ -122,18 +137,7 @@ private:
 	{
 		//Collision velocity
 			// 
-			//Compute linear velocity of both bodies at position
-
-		//check if overlapped last frame, only iterate on first needed.
-		bool overlapedLastFrame = false;
-		std::vector<Rigidbody*> overlapingLastFrame = overlapingBodiesMapCache[pair.first];
-		for (int i = 0; i < overlapingLastFrame.size(); i++)
-		{
-			if (overlapingLastFrame[i] == pair.second)
-			{
-				//overlapedLastFrame = true;
-			}
-		}
+		//Compute linear velocity of both bodies at position
 
 		float elasticity = pair.first->material.elasticity * pair.second->material.elasticity;
 		float friction = pair.first->material.friction * pair.second->material.friction;
@@ -187,9 +191,6 @@ private:
 			if (!pair.second->isKinematic())
 				pair.second->addImpulseAtPosLocal(-vectorImpulse + depenetrationSecond + (frictionAccel / pair.second->inverseMass), diff2);
 		}
-
-		overlapingBodiesMap[pair.first].push_back(pair.second);
-		overlapingBodiesMap[pair.second].push_back(pair.first);
 	}
 
 	void computeCollisionResponse(float deltaTime)
@@ -248,13 +249,18 @@ public:
 			{
 				constraint.update(deltaTime);
 			}
+
+			int i = 0;
+			for (void (*function)(void*, float)  : updates)
+			{
+				function(updateStructs[i], deltaTime);
+				i++;
+			}
 		}
 
 		circleCirclePairs.clear();
 		boxCirclePairs.clear();
 		boxBoxPairs.clear();
-		overlapingBodiesMapCache = overlapingBodiesMap;
-		overlapingBodiesMap.clear();
 		overlapingPairs.clear();
 
 		//Sweep and prune
@@ -282,7 +288,6 @@ public:
 				computeSimulation(fixedDeltaTime);
 			}
 		}
-
 	};
 
 	/// <summary>
@@ -308,6 +313,34 @@ public:
 		return &inst;
 	};
 
+
+	void ignoreBodies(Rigidbody* body1, Rigidbody* body2)
+	{
+		ignoringBodies[body1].push_back(body2);
+		ignoringBodies[body2].push_back(body1);
+	}
+
+	void unignoreBodies(Rigidbody* body1, Rigidbody* body2)
+	{
+		for (int i = 0; i < ignoringBodies[body1].size(); i++)
+		{
+			if (ignoringBodies[body1][i] == body2)
+				ignoringBodies[body1].erase(ignoringBodies[body1].begin() + i);
+		}
+
+		for (int i = 0; i < ignoringBodies[body2].size(); i++)
+		{
+			if (ignoringBodies[body2][i] == body1)
+				ignoringBodies[body2].erase(ignoringBodies[body2].begin() + i);
+		}
+	}
+
+	void addUpdateStruct(void(*_function)(void*, float), void* _struct)
+	{
+		updates.push_back(_function);
+		updateStructs.push_back(_struct);
+	}
+	
 	bool removeRigidbody(Rigidbody* body)
 	{
 		return bodies.erase(body->ID);
@@ -326,6 +359,7 @@ public:
 	{
 		distanceConstraints.clear();
 	};
+	
 
 	void debugDrawRigidbodies()
 	{

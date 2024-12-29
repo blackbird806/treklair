@@ -41,4 +41,3 @@ public:
 		lastDistance = currentDistance;
 	}
 };
-

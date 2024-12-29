@@ -56,6 +56,11 @@ export inline Vec2 Size(const AABB& aabb)
 export struct Circle
 {
 	float radius;
+
+	AABB ToAABB(Vec2 position) const
+	{
+		return AABB(position - Vec2(radius), position + Vec2(radius));
+	}
 };
 
 export struct Box
@@ -66,6 +71,33 @@ export struct Box
 	{
 		return AABB(position - halfSize, position + halfSize);
 	}
+
+	AABB ToAABBRotated(Vec2 position, float rotation) const 
+    {
+        if (rotation == 0.0f) {
+            return AABB{position - halfSize, position + halfSize};
+        }
+        
+        // Calculate rotated corners
+        float c = std::cos(rotation);
+        float s = std::sin(rotation);
+        Vec2 corners[4] = {
+            Vec2(c * halfSize.x - s * halfSize.y,  s * halfSize.x + c * halfSize.y),
+            Vec2(-c * halfSize.x - s * halfSize.y, -s * halfSize.x + c * halfSize.y),
+            Vec2(c * halfSize.x + s * halfSize.y,  s * halfSize.x - c * halfSize.y),
+            Vec2(-c * halfSize.x + s * halfSize.y, -s * halfSize.x - c * halfSize.y)
+        };
+
+        // Find min/max bounds
+        Vec2 min = position + corners[0];
+        Vec2 max = min;
+        for(int i = 1; i < 4; i++) {
+            Vec2 p = position + corners[i];
+            min = Vec2(std::min(min.x, p.x), std::min(min.y, p.y));
+            max = Vec2(std::max(max.x, p.x), std::max(max.y, p.y));
+        }
+        return AABB{min, max};
+    }
 };
 
 #pragma region Overlap
