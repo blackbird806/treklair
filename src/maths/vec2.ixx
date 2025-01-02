@@ -7,6 +7,7 @@
 export module treklair:vec2;
 
 export struct Vec2
+
 {
 	static const Vec2 Right;
 	static const Vec2 Left;
@@ -214,7 +215,7 @@ export struct Vec2
 
 	Vec2 rotated(float angle)
 	{
-		*this = rotate(*this, angle);
+		return rotate(*this, angle);
 	}
 
 	union

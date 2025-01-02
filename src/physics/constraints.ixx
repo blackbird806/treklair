@@ -4,7 +4,7 @@ import <cfloat>;
 import :rigidbody;
 import :vec2;
 
-export struct DistanceContraint
+export struct SpringContraint
 {
 	Rigidbody* firstBody;
 	Rigidbody* secondBody;
@@ -39,5 +39,25 @@ public:
 		secondBody->addImpulse(normal * (-currentConstraintForce * inverseMassRatio2));
 
 		lastDistance = currentDistance;
+	}
+};
+
+export struct CenteredHingeConstraint
+{
+	Rigidbody* secondBody;
+
+	Vec2 position; //scond body relative to first body
+	Rigidbody* firstBody;
+
+	void update(float deltaTime)
+	{
+		float pairInverseMass = firstBody->inverseMass + secondBody->inverseMass;
+		float inverseMassRatio1 = firstBody->inverseMass / pairInverseMass;
+		float inverseMassRatio2 = secondBody->inverseMass / pairInverseMass;
+		Vec2 difference = secondBody->transform.position - firstBody->transform.position;
+		float currentDistance = difference.length();
+		Vec2 normal = difference / currentDistance;
+
+
 	}
 };

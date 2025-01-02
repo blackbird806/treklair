@@ -48,7 +48,7 @@ private:
 	std::vector<void*> updateStructs;
 
 	//Constraints
-	std::vector<DistanceContraint> distanceConstraints;
+	std::vector<SpringContraint> distanceConstraints;
 
 	bool checkBodyIgnored(Rigidbody* body1, Rigidbody* body2)
 	{
@@ -245,7 +245,7 @@ public:
 				body.second.update(deltaTime);
 			}
 
-			for (DistanceContraint& constraint : distanceConstraints)
+			for (SpringContraint& constraint : distanceConstraints)
 			{
 				constraint.update(deltaTime);
 			}
@@ -305,10 +305,10 @@ public:
 		return &body;
 	};
 
-	DistanceContraint* createDistanceConstraint(const DistanceContraint& constraint)
+	SpringContraint* createDistanceConstraint(const SpringContraint& constraint)
 	{
 		distanceConstraints.push_back(constraint);
-		DistanceContraint& inst = distanceConstraints.back();
+		SpringContraint& inst = distanceConstraints.back();
 
 		return &inst;
 	};
@@ -369,7 +369,7 @@ public:
 
 	void debugDrawConstraints()
 	{
-		for (DistanceContraint& constraint : distanceConstraints)
+		for (SpringContraint& constraint : distanceConstraints)
 			quickdraw::drawLine(constraint.firstBody->transform.position, constraint.secondBody->transform.position);
 	};
 };

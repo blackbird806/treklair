@@ -42,12 +42,13 @@ static void createGyrosystem(Simulation& simulation)
 {
 	Rigidbody wheel = Rigidbody(Circle({ 50 }));
 	Rigidbody body = Rigidbody(Box({ 25, 75 }));
+	//body.inverseMass = 1.0/100.0;
 	wheel.transform.position = { 500, 300 };
 	body.transform.position = wheel.transform.position + Vec2(0, -50);
 	gyrosystem.wheel = simulation.createRigidbody(wheel);
 	gyrosystem.body = simulation.createRigidbody(body);
 	simulation.ignoreBodies(gyrosystem.wheel, gyrosystem.body);
-	gyrosystem.spring = simulation.createDistanceConstraint(DistanceContraint(gyrosystem.wheel, gyrosystem.body, 100, 200, 5000));
+	gyrosystem.spring = simulation.createDistanceConstraint(SpringContraint(gyrosystem.wheel, gyrosystem.body, 0, 0, 0));
 	gyrosystem.init();
 	simulation.addUpdateStruct(Gyrosystem::static_update, &gyrosystem);
 }
@@ -83,7 +84,7 @@ int main(int argc, char** argv)
 	Rigidbody square = Rigidbody(Box({ 25, 25 }));
 	std::vector<Rigidbody*> createdBodies;
 
-	DistanceContraint distanceConstraint = DistanceContraint(nullptr, nullptr, 100, 200, 5000 );
+	SpringContraint distanceConstraint = SpringContraint(nullptr, nullptr, 100, 200, 5000 );
 	
 	createGyrosystem(simulation);
 
@@ -163,7 +164,7 @@ int main(int argc, char** argv)
 			Rigidbody rb = input_map_pressed[SDLK_C] ? circle : input_map_pressed[SDLK_B] ? rect : square;
 			rb.transform.position = mousePos;
 			createdBodies.push_back(simulation.createRigidbody(rb));
-			if (createdBodies.size() % 3 == 0)
+			if (false && createdBodies.size() % 3 == 0)
 			{
 				distanceConstraint.firstBody = createdBodies.back();
 				distanceConstraint.secondBody = createdBodies[createdBodies.size() - 2];
