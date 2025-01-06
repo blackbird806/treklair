@@ -20,7 +20,10 @@ export struct Gyrosystem
 	SpringContraint* spring;
 
 	Vec2 constraintPoint;
-	//float linearForce = 10000;
+	float motorMaxForce = 300000;
+	float motorDamp = 5000000;
+
+	float lastAngle;
 	//float angularForce = 30;
 
 	void computeConstraintPoint()
@@ -41,9 +44,21 @@ export struct Gyrosystem
 		float inverseMassRatio2 = secondBody->inverseMass / pairInverseMass;
 		Vec2 difference = secondBody->transform.position - firstBody->transform.position;
 		float currentDistance = difference.length();
-		
-		float angularDifference = secondBody->transform.rotation - firstBody->transform.rotation;
-		//float angularCorrectionForce = deltaTime * (signbit(angularDifference) ? -1 : 1) * angularForce;
+
+		Vec2 groundNormal = Vec2::Up;
+		Vec2 bodyUp = body->transform.rotate(Vec2::Up);
+		float motorAngularImpulse;
+		float angleToCorrect = bodyUp.cross(groundNormal);
+		std::print("\nAngle to correct : {0}", angleToCorrect);
+		motorAngularImpulse = (angleToCorrect) * motorMaxForce * deltaTime;
+
+		float deltaAngle = angleToCorrect - lastAngle;
+		float damping = deltaAngle * deltaTime * motorDamp;
+		motorAngularImpulse += damping;
+
+		firstBody->addAngularImpulse(-motorAngularImpulse);
+		secondBody->addAngularImpulse(motorAngularImpulse);
+
 
 		// get any velocity difference between 2 bodies
 		Vec2 velocityDifference = (firstBody->linearVelocity - secondBody->velocityAtPos(firstBody->transform.position)) * 0.5f / pairInverseMass;
@@ -56,6 +71,8 @@ export struct Gyrosystem
 
 		firstBody->transform.position += positionChange * inverseMassRatio1;
 		secondBody->transform.position -= positionChange * inverseMassRatio2;
+
+		lastAngle = angleToCorrect;
 	}
 
 	static void static_update(void* ptr, float deltaTime)

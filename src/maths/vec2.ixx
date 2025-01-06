@@ -155,8 +155,8 @@ export struct Vec2
 	/*constexpr*/ void normalize() noexcept
 	{
 		float sqr = sqrLength();
-		
-		*this = sqr < FLT_EPSILON && sqr > -FLT_EPSILON ? 0 :  *this / sqrt(sqrLength());
+
+		*this = sqr < FLT_EPSILON && sqr > -FLT_EPSILON ? 0 : *this / sqrt(sqrLength());
 	}
 
 	/*constexpr*/ Vec2 getNormalized() const noexcept
@@ -181,7 +181,7 @@ export struct Vec2
 	static Vec2 closestAxis(Vec2 test, Vec2 a, Vec2 b) noexcept
 	{
 		Vec2 res;
-		float data[4] = {a.x, a.y, b.x, b.y};
+		float data[4] = { a.x, a.y, b.x, b.y };
 		float closest = FLT_MAX;
 		for (int i = 0; i < 4; i++)
 		{
@@ -193,7 +193,7 @@ export struct Vec2
 			res = test;
 			res[i % 2] = data[i];
 		}
-		
+
 		return res;
 	}
 
@@ -216,6 +216,11 @@ export struct Vec2
 	Vec2 rotated(float angle)
 	{
 		return rotate(*this, angle);
+	}
+
+	static float angleBetweenNorm(Vec2 first, Vec2 second)
+	{
+		return std::acosf((first.dot(second)));
 	}
 
 	union
