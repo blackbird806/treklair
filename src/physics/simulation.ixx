@@ -151,7 +151,7 @@ private:
 		Vec2 ang2 = pair.second->angularVelocityVector(diff2);
 		Vec2 vel1 = pair.first->linearVelocity + ang1;
 		Vec2 vel2 = pair.second->linearVelocity + ang2;
-		Vec2 pairVelocity = vel1 - vel2; \
+		Vec2 pairVelocity = vel1 - vel2; 
 		float dotPairVelocity = pairVelocity.dot(normal);
 		float impulse = -(1 + elasticity) * std::max(0.0f, dotPairVelocity) / pairInverseMass;
 		Vec2 vectorImpulse = normal * impulse;
@@ -167,10 +167,11 @@ private:
 			//translate solution
 			//pair.first->transform.position -= shortest.direction * depth * inverseMassRatio1;
 			//pair.second->transform.position += shortest.direction * depth * inverseMassRatio2;
-			
 			//velocity solution
 			Vec2 depenetrationFirst;
 			Vec2 depenetrationSecond;
+			
+
 			if (!pair.first->isKinematic())
 			{
 				depenetrationFirst = normal * -std::min(depth * inverseMassRatio1 * depenetrationForce * deltaTime / pair.first->inverseMass, depenatrationMaxForce * pair.first->inverseMass);
@@ -179,7 +180,7 @@ private:
 			{
 				depenetrationSecond = normal * std::min(depth * inverseMassRatio2 * depenetrationForce * deltaTime / pair.second->inverseMass, depenatrationMaxForce * pair.second->inverseMass);
 			}
-
+			
 			Vec2 tengent = normal.tengent();
 			Vec2 tangentVelo = (tengent * tengent.dot(pairVelocity));
 			Vec2 frictionAccel = tangentVelo * std::min(1.0f, friction * deltaTime);

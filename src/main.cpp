@@ -51,6 +51,7 @@ static void createGyrosystem(Simulation& simulation)
 	gyrosystem.spring = simulation.createDistanceConstraint(SpringContraint(gyrosystem.wheel, gyrosystem.body, 0, 0, 0));
 	gyrosystem.init();
 	simulation.addUpdateStruct(Gyrosystem::static_update, &gyrosystem);
+	gyrosystem.body->transform.rotation = M_PI/2;
 }
 
 int main(int argc, char** argv)
