@@ -41,17 +41,16 @@ Gyrosystem gyrosystem;
 static void createGyrosystem(Simulation& simulation)
 {
 	Rigidbody wheel = Rigidbody(Circle({ 50 }));
-	Rigidbody body = Rigidbody(Box({ 25, 75 }));
+	Rigidbody body = Rigidbody(Box({ 25, 50 }));
 	//body.inverseMass = 1.0/100.0;
 	wheel.transform.position = { 500, 300 };
-	body.transform.position = wheel.transform.position + Vec2(0, -50);
+	body.transform.position = wheel.transform.position + Vec2(0, -75);
 	gyrosystem.wheel = simulation.createRigidbody(wheel);
 	gyrosystem.body = simulation.createRigidbody(body);
 	simulation.ignoreBodies(gyrosystem.wheel, gyrosystem.body);
-	gyrosystem.spring = simulation.createDistanceConstraint(SpringContraint(gyrosystem.wheel, gyrosystem.body, 0, 0, 0));
+	gyrosystem.spring = simulation.createDistanceConstraint(SpringContraint(gyrosystem.wheel, gyrosystem.body, 0, 1500, 100));
 	gyrosystem.init();
 	simulation.addUpdateStruct(Gyrosystem::static_update, &gyrosystem);
-	gyrosystem.body->transform.rotation = M_PI/2;
 }
 
 int main(int argc, char** argv)
@@ -85,7 +84,7 @@ int main(int argc, char** argv)
 	Rigidbody square = Rigidbody(Box({ 25, 25 }));
 	std::vector<Rigidbody*> createdBodies;
 
-	SpringContraint distanceConstraint = SpringContraint(nullptr, nullptr, 100, 200, 5000 );
+	SpringContraint distanceConstraint = SpringContraint(nullptr, nullptr, 100, 150, 500 );
 	
 	createGyrosystem(simulation);
 
@@ -131,7 +130,7 @@ int main(int argc, char** argv)
 		while (SDL_PollEvent(&event))
 		{
 			ImGui_ImplSDL3_ProcessEvent(&event);
-		
+
 			if (event.type == SDL_EVENT_QUIT)
 				done = true;
 
@@ -165,16 +164,6 @@ int main(int argc, char** argv)
 			Rigidbody rb = input_map_pressed[SDLK_C] ? circle : input_map_pressed[SDLK_B] ? rect : square;
 			rb.transform.position = mousePos;
 			createdBodies.push_back(simulation.createRigidbody(rb));
-			if (false && createdBodies.size() % 3 == 0)
-			{
-				distanceConstraint.firstBody = createdBodies.back();
-				distanceConstraint.secondBody = createdBodies[createdBodies.size() - 2];
-				simulation.createDistanceConstraint(distanceConstraint);
-				distanceConstraint.secondBody = createdBodies[createdBodies.size() - 3];
-				simulation.createDistanceConstraint(distanceConstraint);
-				distanceConstraint.firstBody = createdBodies[createdBodies.size() - 2];
-				simulation.createDistanceConstraint(distanceConstraint);
-			}
 		}
 
 		if (input_map_pressed[SDLK_F1])
@@ -188,20 +177,23 @@ int main(int argc, char** argv)
 		{
 			simulation.removeRigidbodies(createdBodies);
 			createdBodies.clear();
-			simulation.clearConstraints();
+			//simulation.clearConstraints();
 		}
 
 		if (input_map_pressed[SDLK_F9])
 			simulation.computeSimulation(1.0f / 10.0f);
 
+		Vec2 directionalInput;
+		directionalInput.x = (input_map[SDLK_RIGHT] ? 1 : 0) - (input_map[SDLK_LEFT] ? 1 : 0);
+		directionalInput.y = - (input_map[SDLK_DOWN] ? 1 : 0);
+		gyrosystem.setBendInput(directionalInput.x);
+		gyrosystem.setSpringInput(directionalInput.y);
+
+
 		SDL_SetRenderLogicalPresentation(sdl_renderer, gameSizeX, gameSizeY, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 		SDL_SetRenderTarget(sdl_renderer, renderTarget);
 		SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 0, 255);
-		SDL_RenderClear(sdl_renderer);
-
-		SDL_SetRenderDrawColor(sdl_renderer, 255, 0, 0, 255);
-		gameRenderer.drawWorld(world);
-		SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 0, 255);
+		SDL_RenderClear(sdl_renderer); 
 
 		SDL_SetRenderTarget(sdl_renderer, nullptr);
 		SDL_SetRenderDrawColor(sdl_renderer, 10, 10, 10, 255);
@@ -242,4 +234,5 @@ int main(int argc, char** argv)
 	SDL_DestroyWindow(sdl_window);
 
     return 0;
-}
+};
+

@@ -165,13 +165,13 @@ private:
 			float depth = shortest.depth;
 			
 			//translate solution
-			//pair.first->transform.position -= shortest.direction * depth * inverseMassRatio1;
-			//pair.second->transform.position += shortest.direction * depth * inverseMassRatio2;
+			pair.first->transform.position -= shortest.direction * depth * inverseMassRatio1;
+			pair.second->transform.position += shortest.direction * depth * inverseMassRatio2;
 			//velocity solution
 			Vec2 depenetrationFirst;
 			Vec2 depenetrationSecond;
 			
-
+			/*
 			if (!pair.first->isKinematic())
 			{
 				depenetrationFirst = normal * -std::min(depth * inverseMassRatio1 * depenetrationForce * deltaTime / pair.first->inverseMass, depenatrationMaxForce * pair.first->inverseMass);
@@ -179,7 +179,7 @@ private:
 			if (!pair.second->isKinematic())
 			{
 				depenetrationSecond = normal * std::min(depth * inverseMassRatio2 * depenetrationForce * deltaTime / pair.second->inverseMass, depenatrationMaxForce * pair.second->inverseMass);
-			}
+			}*/
 			
 			Vec2 tengent = normal.tengent();
 			Vec2 tangentVelo = (tengent * tengent.dot(pairVelocity));
@@ -207,7 +207,6 @@ private:
 			int i = 0;
 			for (Contact& c : pair.contacts)
 			{
-
 				if (c.depth < 0)
 				{
 					c.depth *= -1.0f;
@@ -241,6 +240,13 @@ public:
 		//Update bodies
 		if (simulate)
 		{
+			int i = 0;
+			for (void (*function)(void*, float) : updates)
+			{
+				function(updateStructs[i], deltaTime);
+				i++;
+			}
+
 			for (auto& body : bodies)
 			{
 				body.second.update(deltaTime);
@@ -251,12 +257,7 @@ public:
 				constraint.update(deltaTime);
 			}
 
-			int i = 0;
-			for (void (*function)(void*, float)  : updates)
-			{
-				function(updateStructs[i], deltaTime);
-				i++;
-			}
+
 		}
 
 		circleCirclePairs.clear();
