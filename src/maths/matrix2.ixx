@@ -1,9 +1,6 @@
 module;
-#include <stdexcept>
-#include <string>
-#include <cmath>
 export module treklair:matrix2;
-
+import std;
 import :vec2;
 
 export struct Matrix2
@@ -14,7 +11,7 @@ export struct Matrix2
 
 	Matrix2()
 	{
-		memcpy(data, Identity.data, 4 * sizeof(float));
+		std::memcpy(data, Identity.data, 4 * sizeof(float));
 	}
 
 	Matrix2(float a, float b, float c, float d)
@@ -123,7 +120,7 @@ export struct Matrix2
 	*/
 	static bool areEquals(const Matrix2& left, const Matrix2& right)
 	{
-		return memcmp(&left, &right, 9 * sizeof(float)) == 0;
+		return std::memcmp(&left, &right, 9 * sizeof(float)) == 0;
 	}
 
 	static Matrix2 add(const Matrix2& left, float scalar)
@@ -206,7 +203,7 @@ export struct Matrix2
 	*/
 	static bool isIdentity(const Matrix2& matrix)
 	{
-		return memcmp(Identity.data, matrix.data, 9 * sizeof(float)) == 0;
+		return std::memcmp(Identity.data, matrix.data, 9 * sizeof(float)) == 0;
 	}
 	/*
 	static float determinant(const Matrix2& matrix)

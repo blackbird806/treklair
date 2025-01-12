@@ -1,9 +1,4 @@
-﻿module;
-#include <cassert>
-#include <string>
-#include <stdexcept>
-#include <cmath>
-export module treklair:transform;
+﻿export module treklair:transform;
 import :vec2;
 
 export struct Transform

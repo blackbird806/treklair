@@ -1,9 +1,5 @@
-﻿module;
-#include <stdexcept>
-#include <string>
-#include <cmath>
-export module treklair:matrix3;
-
+﻿export module treklair:matrix3;
+import std;
 import :transform;
 import :vec2;
 
@@ -15,7 +11,7 @@ export struct Matrix3
 
 	Matrix3()
 	{
-		memcpy(data, Identity.data, 9 * sizeof(float));
+		std::memcpy(data, Identity.data, 9 * sizeof(float));
 	}
 
 	Matrix3(float a, float b, float c, float d, float e, float f, float g, float h, float i)
@@ -41,7 +37,7 @@ export struct Matrix3
 
 	Matrix3& operator=(const Matrix3& other)
 	{
-		memcpy(this->data, other.data, 9 * sizeof(float));
+		std::memcpy(this->data, other.data, 9 * sizeof(float));
 		return *this;
 	}
 
@@ -123,7 +119,7 @@ export struct Matrix3
 
 	static bool areEquals(const Matrix3& left, const Matrix3& right)
 	{
-		return memcmp(&left, &right, 9 * sizeof(float)) == 0;
+		return std::memcmp(&left, &right, 9 * sizeof(float)) == 0;
 	}
 
 	static Matrix3 add(const Matrix3& left, float scalar)
@@ -223,7 +219,7 @@ export struct Matrix3
 
 	static bool isIdentity(const Matrix3& matrix)
 	{
-		return memcmp(Identity.data, matrix.data, 9 * sizeof(float)) == 0;
+		return std::memcmp(Identity.data, matrix.data, 9 * sizeof(float)) == 0;
 	}
 
 	static float determinant(const Matrix3& matrix)

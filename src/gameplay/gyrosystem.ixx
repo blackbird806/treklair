@@ -1,6 +1,6 @@
 export module treklair:gyrosystem;
 
-import <print>;
+import std;
 import :rigidbody;
 import :vec2;
 import :constraints;
@@ -21,9 +21,9 @@ export struct Gyrosystem
 
 	Vec2 constraintDirection;
 	float constraintBaseLength;
-	float motorMaxForce = 300000;
+	float motorMaxForce = 500000;
 	float motorDamp = 3000000;
-	float bendForce = 230000;
+	float bendForce = 250000;
 	float bendInput;
 	float springInput;
 
@@ -58,7 +58,8 @@ export struct Gyrosystem
 		float motorAngularImpulse;
 		float angleToCorrect = bodyUp.cross(groundNormal);
 
-		body->addAngularImpulse(bendInput * bendForce * deltaTime );
+		if(angleToCorrect < 0.8)
+			body->addAngularImpulse(bendInput * bendForce * deltaTime);
 
 		std::print("\nAngle to correct : {0}", angleToCorrect);
 		motorAngularImpulse = (angleToCorrect) * motorMaxForce * deltaTime;

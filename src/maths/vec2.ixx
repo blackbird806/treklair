@@ -1,10 +1,10 @@
 ﻿module;
-#include <cassert>
-#include <cmath>
-#include <algorithm>
 #include <SDL3/SDL.h>
 
 export module treklair:vec2;
+import <cassert>;
+import <cfloat>;
+import std;
 
 export struct Vec2
 

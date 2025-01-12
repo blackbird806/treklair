@@ -1,15 +1,8 @@
 module;
 #include <SDL3/SDL_render.h>
+import <cfloat>;
 export module treklair:simulation;
-
-import <vector>;
-import <algorithm>;
-import <print>;
-import <string>;
-import <cstdint>;
-import <cmath>;
-import <unordered_map>;
-
+import std;
 import :shapes;
 import :constraints;
 import :rigidbody;

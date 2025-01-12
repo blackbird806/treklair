@@ -1,9 +1,9 @@
 ﻿module;
 
 #include <cassert>
-#include <vector>
 
 export module treklair:world;
+import std;
 
 export enum class TileType
 {

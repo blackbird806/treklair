@@ -1,10 +1,8 @@
 ﻿module;
-#include <algorithm>
-#include <vector>
-#include <print>
 #include <SDL3/SDL_render.h>
 export module treklair:shapes;
-
+import <cfloat>;
+import std;
 import :matrix3;
 import :matrix2;
 import :vec2;

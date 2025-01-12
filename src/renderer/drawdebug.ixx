@@ -1,17 +1,13 @@
 ﻿module;
 #include <SDL3/SDL.h>;
 #include <cassert>;
-#include <numbers>;
-#include <list>;
-#include <vector>;
-#include <print>;
 export module treklair:quickRenderer;
-
+import std;
 import :globals;
 import :matrix3;
 import :rigidbody;
 import :shapes;
-export import :vec2;
+import :vec2;
 import :gameRenderer;
 
 

@@ -1,9 +1,8 @@
-﻿module;
-#define _USE_MATH_DEFINES
-import <cmath>;
+﻿export module treklair:rigidbody;
+
+import std;
 import <cfloat>;
 
-export module treklair:rigidbody;
 import :shapes;
 import :transform;
 import :globals;
@@ -43,6 +42,9 @@ public:
 	float inverseInertia = 1;
 	float gravityScale = 1;
 	PhysicsMaterial material;
+	float linearDrag = 0.1;
+	float angularDrag = 1;
+	float maxAngularVelocity = 20;
 
 	Rigidbody() :
 		transform(),
@@ -174,7 +176,13 @@ public:
 			//TO DO: Calculate estimated velocities with last transformations
 			return;
 		}
-		linearVelocity += (depenetrationVelocity + gravity * gravityScale) * deltaTime;
+		Vec2 linearDragImpulse = linearVelocity * 0.5 * linearDrag;
+		float angularDragImpulse = angularDrag * angularVelocity;
+
+		linearVelocity += (depenetrationVelocity + gravity * gravityScale - linearDragImpulse) * deltaTime;
+		angularVelocity -= angularDragImpulse * deltaTime;
+		angularVelocity = std::clamp(angularVelocity, -maxAngularVelocity, maxAngularVelocity);
+
 		depenetrationVelocity = Vec2::Zero;
 		updateNoCCD(deltaTime);
 	};

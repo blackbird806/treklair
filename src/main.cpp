@@ -1,20 +1,14 @@
 ﻿#define _USE_MATH_DEFINES
 
-#include <format>
-#include <print>
-#include <unordered_map>
-
 #include "imgui.h"
 #include "backends/imgui_impl_sdl3.h"
 #include "backends/imgui_impl_sdlrenderer3.h"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
-#include <string>
-#include <vector>
-#include <cmath>
 
 import treklair;
+import std;
 
 std::unordered_map<SDL_Keycode, bool> input_map;
 std::unordered_map<SDL_Keycode, bool> input_map_pressed;
@@ -43,7 +37,7 @@ static void createGyrosystem(Simulation& simulation)
 	Rigidbody wheel = Rigidbody(Circle({ 50 }));
 	Rigidbody body = Rigidbody(Box({ 25, 25 }));
 	//body.inverseMass = 1.0/100.0;
-	wheel.transform.position = { 500, 300 };
+	wheel.transform.position = { 0, -300 };
 	body.transform.position = wheel.transform.position + Vec2(0, -85);
 	gyrosystem.wheel = simulation.createRigidbody(wheel);
 	gyrosystem.body = simulation.createRigidbody(body);
@@ -53,9 +47,35 @@ static void createGyrosystem(Simulation& simulation)
 	simulation.addUpdateStruct(Gyrosystem::static_update, &gyrosystem);
 }
 
+static void createLevel(Simulation& simulation)
+{
+	Rigidbody base = Rigidbody(Box({ 1000,50 }));
+	base.transform.position = { 0, 0 };
+	base.inverseMass = 0;
+	base.transform.rotation = 0;
+	simulation.createRigidbody(base);
+	base.transform.position = { 2300, -300 };
+	simulation.createRigidbody(base);
+
+	Rigidbody half = Rigidbody(Box({ 500,50 }));
+	half.transform.position = { -1000, 0 };
+	half.inverseMass = 0;
+	half.transform.rotation = M_PI/2;
+	simulation.createRigidbody(half);
+
+	half.transform.rotation = -M_PI / 4;
+	half.transform.position = { 1000, 0 };
+	simulation.createRigidbody(half);
+
+	Rigidbody small = Rigidbody(Box({ 250,50 }));
+	half.transform.position = { 50, 500 };
+	//simulation.createRigidbody(small);
+}
+
+
 int main(int argc, char** argv)
 {
-	std::srand(time(0));
+	std::srand(std::time(0));
 	Uint64 timeNow = SDL_GetPerformanceCounter();
 	Uint64 timeLast = 0;
 	float deltaTime = 0;
@@ -63,21 +83,7 @@ int main(int argc, char** argv)
 
 	Simulation simulation;
 
-	Rigidbody base = Rigidbody(Box({ 400,50 }));
-	base.transform.position = { 500, 650 };
-	base.inverseMass = 0;
-	base.transform.rotation = 0;
-	simulation.createRigidbody(base);
-	base.transform.position = { 500, 50 };
-	//simulation.createRigidbody(base);
-
-	Rigidbody side = Rigidbody(Box({50,200}));
-	side.transform.position = { 50, 500};
-	side.inverseMass = 0;
-	side.transform.rotation = 0;
-	simulation.createRigidbody(side);
-	side.transform.position = { 950, 500 };
-	simulation.createRigidbody(side);
+	createLevel(simulation);
 
 	Rigidbody rect = Rigidbody(Box({ 200, 10 }));
 	Rigidbody circle = Rigidbody(Circle({ 25 }));
