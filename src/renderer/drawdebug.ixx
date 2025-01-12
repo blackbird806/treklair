@@ -11,7 +11,9 @@ import :globals;
 import :matrix3;
 import :rigidbody;
 import :shapes;
-import :vec2;
+export import :vec2;
+import :gameRenderer;
+
 
 namespace quickdraw {
 	struct LineTime
@@ -23,6 +25,12 @@ namespace quickdraw {
 	};
 
 	static std::vector<LineTime> lineTimes;
+	static Vec2 cameraPosition;
+
+	export void setCameraPosition(Vec2 pos)
+	{
+		cameraPosition = pos;
+	}
 
 	export void updateDebugDraw(float deltaTime)
 	{
@@ -37,6 +45,24 @@ namespace quickdraw {
 				i--;
 			}
 		}
+	}
+
+	export void drawLines(Vec2* points, int count)
+	{
+		for (int i = 0; i < count; i++)
+			points[i] -= cameraPosition;
+
+		SDL_RenderLines(sdl_renderer, reinterpret_cast<SDL_FPoint*>(points), count);
+	}
+
+	export void drawLine(float x1, float y1, float x2, float y2)
+	{
+		SDL_RenderLine(sdl_renderer, x1 - cameraPosition.x, y1 - cameraPosition.y, x2 - cameraPosition.x, y2 - cameraPosition.y);
+	}
+
+	export void drawLine(const Vec2& start, const Vec2& end)
+	{
+		SDL_RenderLine(sdl_renderer, start.x - cameraPosition.x, start.y - cameraPosition.y, end.x - cameraPosition.x, end.y - cameraPosition.y);
 	}
 
 	export void drawAABB
@@ -63,13 +89,13 @@ namespace quickdraw {
 		points[1] += rb.transform.position;
 		points[4] = points[0];
 
-		SDL_RenderLines(sdl_renderer, reinterpret_cast<SDL_FPoint*>(points), 5);
+		drawLines(points, 5);
 	};
 
 	export void drawCircle(float radius, const Vec2& pos, float rotation, int pointNumber = 16)
 	{
 		assert(pointNumber < 64);
-		SDL_FPoint points[66];
+		Vec2 points[66];
 
 		float theta = rotation;
 		float step = std::numbers::pi * 2 / pointNumber;
@@ -84,8 +110,7 @@ namespace quickdraw {
 		points[pointNumber + 1].x = pos.x;
 		points[pointNumber + 1].y = pos.y;
 
-
-		SDL_RenderLines(sdl_renderer, points, pointNumber + 2);
+		drawLines(points, pointNumber + 2);
 	};
 
 	export void drawRigidbody(const Rigidbody& rb)
@@ -103,7 +128,7 @@ namespace quickdraw {
 
 	export void drawContact(const Contact& contact)
 	{
-		SDL_RenderLine(sdl_renderer, contact.point.x, contact.point.y, contact.point.x + (contact.direction.x * contact.depth), contact.point.y + (contact.direction.y * contact.depth));
+		drawLine(contact.point.x, contact.point.y, contact.point.x + (contact.direction.x * contact.depth), contact.point.y + (contact.direction.y * contact.depth));
 	}
 
 	export void drawLineTime(const Vec2& start, const Vec2& end, float time)
@@ -111,8 +136,5 @@ namespace quickdraw {
 		lineTimes.push_back(LineTime(start, end, time));
 	}
 
-	export void drawLine(const Vec2& start, const Vec2& end)
-	{
-		SDL_RenderLine(sdl_renderer, start.x,start.y, end.x, end.y);
-	}
+	
 }

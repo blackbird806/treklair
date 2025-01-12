@@ -22,8 +22,8 @@ export struct Gyrosystem
 	Vec2 constraintDirection;
 	float constraintBaseLength;
 	float motorMaxForce = 300000;
-	float motorDamp = 5000000;
-	float bendForce = 100000;
+	float motorDamp = 3000000;
+	float bendForce = 230000;
 	float bendInput;
 	float springInput;
 
@@ -45,7 +45,6 @@ export struct Gyrosystem
 
 	void update(float deltaTime)
 	{
-		body->addAngularImpulse(bendInput * bendForce * deltaTime);
 		spring->distance = constraintBaseLength * springInput;
 
 		float pairInverseMass = firstBody->inverseMass + secondBody->inverseMass;
@@ -58,8 +57,11 @@ export struct Gyrosystem
 		Vec2 bodyUp = body->transform.rotate(Vec2::Up);
 		float motorAngularImpulse;
 		float angleToCorrect = bodyUp.cross(groundNormal);
+
+		body->addAngularImpulse(bendInput * bendForce * deltaTime );
+
 		std::print("\nAngle to correct : {0}", angleToCorrect);
-		motorAngularImpulse = (angleToCorrect)*motorMaxForce * deltaTime;
+		motorAngularImpulse = (angleToCorrect) * motorMaxForce * deltaTime;
 
 		float deltaAngle = angleToCorrect - lastAngle;
 		float damping = deltaAngle * deltaTime * motorDamp;
@@ -90,7 +92,7 @@ export struct Gyrosystem
 
 	void setSpringInput(float input)
 	{
-		springInput = input * 0.75 + 1;
+		springInput = input * 1 + 1;
 	};
 
 	static void static_update(void* ptr, float deltaTime)

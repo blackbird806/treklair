@@ -12,7 +12,7 @@ import :matrix3;
 
 struct PhysicsMaterial
 {
-	float elasticity = 0;
+	float elasticity = 0.0f;
 	float friction = 5.0f;
 };
 

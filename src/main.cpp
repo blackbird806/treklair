@@ -41,10 +41,10 @@ Gyrosystem gyrosystem;
 static void createGyrosystem(Simulation& simulation)
 {
 	Rigidbody wheel = Rigidbody(Circle({ 50 }));
-	Rigidbody body = Rigidbody(Box({ 25, 50 }));
+	Rigidbody body = Rigidbody(Box({ 25, 25 }));
 	//body.inverseMass = 1.0/100.0;
 	wheel.transform.position = { 500, 300 };
-	body.transform.position = wheel.transform.position + Vec2(0, -75);
+	body.transform.position = wheel.transform.position + Vec2(0, -85);
 	gyrosystem.wheel = simulation.createRigidbody(wheel);
 	gyrosystem.body = simulation.createRigidbody(body);
 	simulation.ignoreBodies(gyrosystem.wheel, gyrosystem.body);
@@ -189,6 +189,7 @@ int main(int argc, char** argv)
 		gyrosystem.setBendInput(directionalInput.x);
 		gyrosystem.setSpringInput(directionalInput.y);
 
+		quickdraw::setCameraPosition(gameRenderer.camera.pos = (gyrosystem.wheel->transform.position) - Vec2(gameSizeX, gameSizeY) * 0.75f);
 
 		SDL_SetRenderLogicalPresentation(sdl_renderer, gameSizeX, gameSizeY, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 		SDL_SetRenderTarget(sdl_renderer, renderTarget);
