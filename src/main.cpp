@@ -62,6 +62,9 @@ static void createLevel(Simulation& simulation)
 	half.inverseMass = 0;
 	half.transform.rotation = M_PI/2;
 	simulation.createRigidbody(half);
+	half.transform.position = { 3200, -500 };
+	simulation.createRigidbody(half);
+
 
 	half.transform.rotation = -M_PI / 4;
 	half.transform.position = { 1000, 0 };
@@ -90,7 +93,7 @@ int main(int argc, char** argv)
 	Rigidbody square = Rigidbody(Box({ 25, 25 }));
 	std::vector<Rigidbody*> createdBodies;
 
-	SpringContraint distanceConstraint = SpringContraint(nullptr, nullptr, 100, 150, 500 );
+	SpringContraint distanceConstraint = SpringContraint(nullptr, nullptr, 100, 300, 500 );
 	
 	createGyrosystem(simulation);
 
@@ -118,6 +121,7 @@ int main(int argc, char** argv)
 	
 	Vec2 mousePos;
 	bool keyPressed;
+	bool isSpawningSpring = false;
 
 	GameRenderer gameRenderer;
 	World world(1, 1);
@@ -168,8 +172,24 @@ int main(int argc, char** argv)
 		if (input_map_pressed[SDLK_C] || input_map_pressed[SDLK_B] || input_map_pressed[SDLK_V])
 		{
 			Rigidbody rb = input_map_pressed[SDLK_C] ? circle : input_map_pressed[SDLK_B] ? rect : square;
-			rb.transform.position = mousePos;
+			rb.transform.position = mousePos + gameRenderer.camera.pos;
 			createdBodies.push_back(simulation.createRigidbody(rb));
+
+			if (isSpawningSpring == true && createdBodies.size() % 3 == 0)
+			{
+				distanceConstraint.firstBody = createdBodies.back();
+				distanceConstraint.secondBody = createdBodies[createdBodies.size() - 2];
+				simulation.createDistanceConstraint(distanceConstraint);
+				distanceConstraint.secondBody = createdBodies[createdBodies.size() - 3];
+				simulation.createDistanceConstraint(distanceConstraint);
+				distanceConstraint.firstBody = createdBodies[createdBodies.size() - 2];
+				simulation.createDistanceConstraint(distanceConstraint);
+			}
+		}
+
+		if (input_map_pressed[SDLK_Z] == true)
+		{
+			isSpawningSpring = !isSpawningSpring;
 		}
 
 		if (input_map_pressed[SDLK_F1])
