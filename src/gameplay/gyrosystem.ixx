@@ -61,7 +61,6 @@ export struct Gyrosystem
 		if(angleToCorrect < 0.8)
 			body->addAngularImpulse(bendInput * bendForce * deltaTime);
 
-		std::print("\nAngle to correct : {0}", angleToCorrect);
 		motorAngularImpulse = (angleToCorrect) * motorMaxForce * deltaTime;
 
 		float deltaAngle = angleToCorrect - lastAngle;

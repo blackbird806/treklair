@@ -93,11 +93,11 @@ int main(int argc, char** argv)
 	Rigidbody square = Rigidbody(Box({ 25, 25 }));
 	std::vector<Rigidbody*> createdBodies;
 
-	SpringContraint distanceConstraint = SpringContraint(nullptr, nullptr, 100, 300, 500 );
+	SpringContraint distanceConstraint = SpringContraint(nullptr, nullptr, 100, 300, 1000 );
 	
 	createGyrosystem(simulation);
 
-	std::print("hello {}", "world");
+	std::print("launching gyrobot sim \nUse arrow keys to move, \nX / C / V to spawn bodies \nZ to toggle spring joint spawning");
 
 	if (!SDL_Init(SDL_INIT_VIDEO))
 	{
@@ -105,7 +105,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	if (!SDL_CreateWindowAndRenderer("treklair", 1280, 720, SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY, &sdl_window, &sdl_renderer))
+	if (!SDL_CreateWindowAndRenderer("Gyrobot", 1280, 720, SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY, &sdl_window, &sdl_renderer))
 	{
 		std::print("failed to create renderer and window");
 		return -1;
@@ -131,7 +131,7 @@ int main(int argc, char** argv)
 		timeNow = SDL_GetPerformanceCounter();
 		deltaTime = (float)((timeNow - timeLast) / (float)SDL_GetPerformanceFrequency());
 
-		SDL_SetWindowTitle(sdl_window, ("treklair dt : " + std::to_string(deltaTime)).c_str());
+		//SDL_SetWindowTitle(sdl_window, ("treklair dt : " + std::to_string(deltaTime)).c_str());
 
 		input_map_pressed.clear();
 		input_map_released.clear();
