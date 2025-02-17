@@ -9,5 +9,10 @@ build/
 .cache
 compile_commands.json
 .vs/
+<<<<<<< HEAD
+vsxmake2022/
+=======
 
 
+vsxmake2022
+>>>>>>> origin/foldota
