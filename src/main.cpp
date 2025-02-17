@@ -97,7 +97,7 @@ int main(int argc, char** argv)
 	
 	createGyrosystem(simulation);
 
-	std::print("launching gyrobot sim \nUse arrow keys to move, \nX / C / V to spawn bodies \nZ to toggle spring joint spawning");
+	std::print("launching GyroPhysics sim \nUse arrow keys to move, \nC / V / B to spawn bodies \nZ to toggle spring joint spawning \nF3 to clear bodies \nF2 to pause and F9 to step update");
 
 	if (!SDL_Init(SDL_INIT_VIDEO))
 	{
@@ -105,7 +105,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	if (!SDL_CreateWindowAndRenderer("Gyrobot", 1280, 720, SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY, &sdl_window, &sdl_renderer))
+	if (!SDL_CreateWindowAndRenderer("GyroPhysics", 1280, 720, SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY, &sdl_window, &sdl_renderer))
 	{
 		std::print("failed to create renderer and window");
 		return -1;
@@ -192,8 +192,8 @@ int main(int argc, char** argv)
 			isSpawningSpring = !isSpawningSpring;
 		}
 
-		if (input_map_pressed[SDLK_F1])
-			simulation.simulate = !simulation.simulate;
+		//if (input_map_pressed[SDLK_F1])
+			//simulation.simulate = !simulation.simulate;
 
 		if (input_map_pressed[SDLK_F2])
 			timeDilation = timeDilation == 0 ? 1 : 0;
@@ -207,7 +207,7 @@ int main(int argc, char** argv)
 		}
 
 		if (input_map_pressed[SDLK_F9])
-			simulation.computeSimulation(1.0f / 10.0f);
+			simulation.computeSimulation(1.0f / 100.0f);
 
 		Vec2 directionalInput;
 		directionalInput.x = (input_map[SDLK_RIGHT] ? 1 : 0) - (input_map[SDLK_LEFT] ? 1 : 0);
@@ -247,9 +247,6 @@ int main(int argc, char** argv)
 
 		engineRenderer.engineUI();
 
-		ImGui::Begin("hello", nullptr);
-		ImGui::Button("test");
-		ImGui::End();
 
 		engineRenderer.draw();
 	}
