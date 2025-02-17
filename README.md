@@ -1,5 +1,8 @@
 This project was originaly purposed to be a platformer but it ended up as 2d physics sim (made by @ironax).
 
+build available at:
+[GyroPhysics](https://ironax.itch.io/gyrophysics)
+
 Commands :
     Arrows keys to control the Gyrobot
     C/V/B to spawn bodies (Circle/Square/Rect)
